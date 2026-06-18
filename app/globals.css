@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #080A10;
+  --surface: #12151E;
+  --surface2: #181C28;
+  --card: #13161F;
+  --card-hover: #1A1E2E;
+  --border: #1E2235;
+  --border-light: #2A2F45;
+  --text: #E8EAF0;
+  --text-muted: #7E839A;
+  --text-dim: #4A4F68;
+  --accent: #6C8EF2;
+  --accent-soft: rgba(108, 142, 242, 0.1);
+  --accent-border: rgba(108, 142, 242, 0.25);
+  --green: #3DD9A0;
+  --green-soft: rgba(61, 217, 160, 0.08);
+  --green-border: rgba(61, 217, 160, 0.2);
+  --yellow: #F5C542;
+  --yellow-soft: rgba(245, 197, 66, 0.08);
+  --yellow-border: rgba(245, 197, 66, 0.2);
+  --orange: #F59E42;
+  --orange-soft: rgba(245, 158, 66, 0.08);
+  --orange-border: rgba(245, 158, 66, 0.2);
+  --red: #F07070;
+  --red-soft: rgba(240, 112, 112, 0.08);
+  --red-border: rgba(240, 112, 112, 0.2);
+  --purple: #A78BFA;
+  --purple-soft: rgba(167, 139, 250, 0.08);
+  --cyan: #38BDF8;
+  --cyan-soft: rgba(56, 189, 248, 0.08);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --font: 'Outfit', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --glow-accent: 0 0 20px rgba(108, 142, 242, 0.15);
+  --glow-green: 0 0 20px rgba(61, 217, 160, 0.12);
+  --glow-red: 0 0 20px rgba(240, 112, 112, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::selection { background: var(--accent-soft); color: var(--accent); }
