@@ -170,7 +170,19 @@ export function UnavailForm({ user, onSubmitted }: Props) {
       {memberInfo?.member && (
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="p-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
-            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Saldo</div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Saldo</div>
+              <Button
+                onClick={atualizarCreditos}
+                loading={checkingCredits}
+                label="Atualizar créditos"
+                icon={<RefreshCw size={11} />}
+                severity="secondary"
+                text
+                size="small"
+                className="!p-0 !text-[11px] !text-[var(--text-muted)] hover:!text-[var(--text)]"
+              />
+            </div>
             <div className={`text-2xl font-bold font-mono ${quotaColor}`}>{memberInfo.remaining_days} <span className="text-xs font-normal text-[var(--text-muted)]">dias</span></div>
           </div>
           {memberInfo.approver && (
@@ -184,20 +196,6 @@ export function UnavailForm({ user, onSubmitted }: Props) {
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {memberInfo?.member && (
-        <div className="flex justify-end mb-5 -mt-2">
-          <Button
-            onClick={atualizarCreditos}
-            loading={checkingCredits}
-            label="Atualizar créditos"
-            icon={<RefreshCw size={13} />}
-            severity="secondary"
-            outlined
-            size="small"
-          />
         </div>
       )}
 
