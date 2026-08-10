@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+import { computeCreditUpdate } from './day-off-credits';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -13,7 +14,34 @@ export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 const USERS_TABLE = 'users5';
 const MEMBERS_TABLE = 'members';
 
+/**
+ * Ajusta o saldo (day_offs_quota) do membro vinculado a um usuário, somando
+ * `deltaDays` (negativo pra descontar, positivo pra devolver). Usado quando
+ * uma solicitação de indisponibilidade é aprovada (desconta) ou uma
+ * solicitação já aprovada é removida (devolve).
+ */
+async function adjustMemberDayOffsBalance(userId: number, deltaDays: number) {
+  if (!deltaDays) return;
+  const userRes = await supabase.from(USERS_TABLE).select('member_id').eq('id', userId).single();
+  const memberId = userRes.data ? (userRes.data as any).member_id : null;
+  if (!memberId) return; // usuário sem membro vinculado — nada a ajustar
+  const memberRes = await supabase.from(MEMBERS_TABLE).select('day_offs_quota').eq('id', memberId).single();
+  if (memberRes.error) { console.error('adjustMemberDayOffsBalance read error:', memberRes.error.message); return; }
+  const current = (memberRes.data as any)?.day_offs_quota || 0;
+  const res = await supabase.from(MEMBERS_TABLE).update({ day_offs_quota: current + deltaDays }).eq('id', memberId);
+  if (res.error) console.error('adjustMemberDayOffsBalance update error:', res.error.message);
+}
+
 export const queries = {
+  /** Saldo atual (day_offs_quota) do membro vinculado a um usuário, ou null se não houver membro vinculado. */
+  getMemberBalanceForUser: async (userId: number): Promise<number | null> => {
+    const userRes = await supabase.from(USERS_TABLE).select('member_id').eq('id', userId).single();
+    const memberId = userRes.data ? (userRes.data as any).member_id : null;
+    if (!memberId) return null;
+    const memberRes = await supabase.from(MEMBERS_TABLE).select('day_offs_quota').eq('id', memberId).single();
+    if (memberRes.error || !memberRes.data) return null;
+    return (memberRes.data as any).day_offs_quota || 0;
+  },
   getUserByEmail: async (email: string) => {
     const res = await supabase.from(USERS_TABLE).select('*').eq('email', email).single();
     if (res.error && res.error.code === 'PGRST116') return null;
@@ -41,13 +69,13 @@ export const queries = {
   },
   getMembersByIds: async (ids: number[]) => {
     if (!ids || !ids.length) return [];
-    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, report_to').in('id', ids);
+    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to').in('id', ids);
     if (res.error) return [];
     return res.data || [];
   },
   getMembersByEmails: async (emails: string[]) => {
     if (!emails || !emails.length) return [];
-    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, report_to').in('email', emails);
+    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to').in('email', emails);
     if (res.error) return [];
     return res.data || [];
   },
@@ -118,6 +146,20 @@ export const queries = {
     const res = await supabase.from(MEMBERS_TABLE).select('*').eq('id', id).single();
     if (res.error && res.error.code === 'PGRST116') return null;
     return res.data;
+  },
+  /**
+   * Checagem manual (botão "Atualizar créditos" na aba Solicitar): confere
+   * se o membro tem um crédito anual de +20 dias pendente (ver regra em
+   * ./day-off-credits.ts) e aplica se houver. Retorna { updated, member }.
+   */
+  checkAndApplyDayOffCredit: async (email: string) => {
+    const member = await queries.getMemberByEmail(email);
+    if (!member) return { updated: false, member: null };
+    const update = computeCreditUpdate(member as any);
+    if (!update) return { updated: false, member };
+    const res = await supabase.from(MEMBERS_TABLE).update(update).eq('id', (member as any).id).select().single();
+    if (res.error) throw res.error;
+    return { updated: true, member: res.data };
   },
   createMember: async (data: any) => {
     const res = await supabase.from(MEMBERS_TABLE).insert([data]).select();
@@ -212,8 +254,10 @@ export const queries = {
     return (res.data || []).map((d: any) => ({ ...d, user_name: d[USERS_TABLE]?.nome, user_email: d[USERS_TABLE]?.email, user_role: d[USERS_TABLE]?.role }));
   },
   approveUnavailability: async ({ id, reviewed_by }: { id: number; reviewed_by: number }) => {
+    const record: any = await queries.getUnavailabilityById(id);
     const res = await supabase.from('unavailability').update({ status: 'approved', reviewed_by, reviewed_at: new Date().toISOString() }).eq('id', id);
     if (res.error) throw res.error;
+    if (record) await adjustMemberDayOffsBalance(record.user_id, -(record.total_days || 0));
   },
   rejectUnavailability: async ({ id, reviewed_by }: { id: number; reviewed_by: number }) => {
     const res = await supabase.from('unavailability').update({ status: 'rejected', reviewed_by, reviewed_at: new Date().toISOString() }).eq('id', id);
@@ -224,8 +268,14 @@ export const queries = {
     if (res.error) throw res.error;
   },
   deleteUnavailability: async (id: number) => {
+    const record: any = await queries.getUnavailabilityById(id);
     const res = await supabase.from('unavailability').delete().eq('id', id);
     if (res.error) throw res.error;
+    // Se a solicitação já estava aprovada (só admin_editor+ consegue excluir
+    // uma aprovada), devolve os dias descontados no saldo.
+    if (record && record.status === 'approved') {
+      await adjustMemberDayOffsBalance(record.user_id, record.total_days || 0);
+    }
   },
   getUnavailabilityById: async (id: number) => {
     const res = await supabase.from('unavailability').select('*').eq('id', id).single();

@@ -28,6 +28,7 @@ interface Member {
   report_to?: string | null;
   operacoes?: boolean;
   day_offs_quota?: number;
+  mes_ano_entrada?: string | null;
 }
 
 function AdminMembersPage() {
@@ -82,7 +83,7 @@ function AdminMembersPage() {
   }
 
   function openEdit(m: Member | null) {
-    setEditing(m || { id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to: '', operacoes: false, day_offs_quota: 20 });
+    setEditing(m || { id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
     setEditOpen(true);
   }
 
@@ -145,6 +146,7 @@ function AdminMembersPage() {
                   <th className="px-3 py-2.5 text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Email</th>
                   <th className="px-3 py-2.5 text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Equipe/Squad</th>
                   <th className="px-3 py-2.5 text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Reporta para</th>
+                  <th className="px-3 py-2.5 text-center text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Entrada</th>
                   <th className="px-3 py-2.5 text-center text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Dias</th>
                   <th className="px-3 py-2.5 text-center text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Ações</th>
                 </tr>
@@ -160,6 +162,7 @@ function AdminMembersPage() {
                       {m.squad && <div className="text-[11px] text-[var(--text-muted)]">{m.squad}</div>}
                     </td>
                     <td className="px-3 py-2 text-xs text-[var(--text-muted)]">{reportToNames(m.report_to)}</td>
+                    <td className="px-3 py-2 text-center text-xs text-[var(--text-muted)]">{m.mes_ano_entrada || '-'}</td>
                     <td className="px-3 py-2 text-center text-xs">{m.day_offs_quota ?? '-'}</td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex gap-1.5 justify-center">
@@ -182,7 +185,7 @@ function AdminMembersPage() {
 
 function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { visible: boolean; onHide: () => void; member: Member | null; members: Member[]; setores: string[]; onSaved: () => void }) {
   const toast = useToast();
-  const [form, setForm] = useState<Member>({ id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to: '', operacoes: false, day_offs_quota: 20 });
+  const [form, setForm] = useState<Member>({ id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
   const [approverFilter, setApproverFilter] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -215,6 +218,11 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
       toast.show('Nome, área e função são obrigatórios.', 'error');
       return;
     }
+    const mesAnoEntrada = (form.mes_ano_entrada || '').trim();
+    if (mesAnoEntrada && !/^(0?[1-9]|1[0-2])\/\d{4}$/.test(mesAnoEntrada)) {
+      toast.show('Mês/Ano de Entrada deve estar no formato MM/AAAA (ex: 03/2024).', 'error');
+      return;
+    }
     setSaving(true);
     try {
       const data = {
@@ -226,6 +234,7 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
         report_to: form.report_to || null,
         day_offs_quota: form.day_offs_quota,
         operacoes: !!form.operacoes,
+        mes_ano_entrada: mesAnoEntrada || null,
       };
       if (form.id && form.id > 0) {
         await API.updateMember(form.id, data);
@@ -270,9 +279,21 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
           <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Função *</label>
           <InputText value={form.funcao || ''} onChange={(e) => setForm({ ...form, funcao: e.target.value })} className="w-full" />
         </div>
-        <div>
-          <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Quota de dias</label>
-          <InputNumber value={form.day_offs_quota || 20} onValueChange={(e) => setForm({ ...form, day_offs_quota: e.value || 20 })} min={0} className="w-32" />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Quota de dias</label>
+            <InputNumber value={form.day_offs_quota || 20} onValueChange={(e) => setForm({ ...form, day_offs_quota: e.value || 20 })} min={0} className="w-32" />
+          </div>
+          <div>
+            <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Mês/Ano de Entrada</label>
+            <InputText
+              value={form.mes_ano_entrada || ''}
+              onChange={(e) => setForm({ ...form, mes_ano_entrada: e.target.value })}
+              placeholder="MM/AAAA"
+              className="w-32"
+            />
+            <p className="text-[10px] text-[var(--text-muted)] mt-1">Usado para creditar +20 dias a cada ano completo de casa (a partir do 2º ano).</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Checkbox inputId="mf_operacoes" checked={!!form.operacoes} onChange={(e) => setForm({ ...form, operacoes: e.checked || false })} />

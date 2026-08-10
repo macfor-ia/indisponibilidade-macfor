@@ -41,6 +41,12 @@ export function countCalendarDays(startMs: number, endMs: number) {
   return Math.round((endMs - startMs) / 86400000) + 1;
 }
 
+/** true se a data (em ms UTC) cair numa sexta-feira ou sábado (dias em que o período de dias corridos não pode terminar). */
+export function isFridayOrSaturday(ms: number) {
+  const dow = new Date(ms).getUTCDay();
+  return dow === 5 || dow === 6;
+}
+
 export interface AuthUser {
   id: number;
   email: string;

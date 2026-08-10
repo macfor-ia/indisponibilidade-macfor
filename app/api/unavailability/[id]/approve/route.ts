@@ -14,6 +14,10 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
     if (record.status !== 'pending') return NextResponse.json({ error: 'Solicitação já foi revisada.' }, { status: 400 });
     const canApprove = await canApproveUnavailability(user!, record);
     if (!canApprove) return NextResponse.json({ error: 'Você não tem permissão para confirmar esta solicitação.' }, { status: 403 });
+    const balance = await queries.getMemberBalanceForUser(record.user_id);
+    if (balance !== null && (record.total_days || 0) > balance) {
+      return NextResponse.json({ error: `Saldo insuficiente: o prestador tem ${balance} dia(s) disponível(is) e a solicitação é de ${record.total_days} dia(s).` }, { status: 400 });
+    }
     await queries.approveUnavailability({ id: parseInt(id), reviewed_by: user!.id });
     return NextResponse.json({ success: true });
   } catch (e: any) {

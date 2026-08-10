@@ -6,10 +6,13 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { API } from '../../lib/api-client';
+import { ROLE_LABELS } from '../../lib/client-config';
+
+const SELF_SERVICE_ROLES = ['colaborador', 'lider', 'socio'];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '', department: '' });
+  const [form, setForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '', department: '', role: 'colaborador' });
   const [setores, setSetores] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -48,7 +51,7 @@ export default function RegisterPage() {
     }
     setSubmitting(true);
     try {
-      await API.register({ full_name: form.full_name, email: form.email, password: form.password, department: form.department });
+      await API.register({ full_name: form.full_name, email: form.email, password: form.password, department: form.department, role: form.role });
       setSuccess(true);
     } catch (err: any) {
       console.error('[register] erro:', err);
@@ -107,6 +110,18 @@ export default function RegisterPage() {
               placeholder="Selecione seu setor"
               className="w-full"
             />
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Tipo de acesso</label>
+            <Dropdown
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.value })}
+              options={SELF_SERVICE_ROLES.map((r) => ({ label: ROLE_LABELS[r] || r, value: r }))}
+              className="w-full"
+            />
+            <p className="text-[11px] text-[var(--text-muted)] mt-1">
+              Sujeito à aprovação de um administrador antes de valer.
+            </p>
           </div>
           {error && (
             <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm">{error}</div>

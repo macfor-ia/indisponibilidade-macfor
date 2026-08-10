@@ -7,8 +7,7 @@ export async function GET() {
   if (response) return response;
 
   const member = await queries.getMemberByEmail(user!.email);
-  if (!member) return NextResponse.json({ member: null, approver: null, used_days: 0, remaining_days: 0 });
-  const usedDays = await queries.getUsedDaysByUser(user!.id);
+  if (!member) return NextResponse.json({ member: null, approver: null, remaining_days: 0 });
   const approverResult = await queries.getApproverForMember(user!.email);
   let approver: any = null;
   if (Array.isArray(approverResult)) {
@@ -17,11 +16,11 @@ export async function GET() {
     approver = { name: (approverResult as any).name, email: (approverResult as any).email };
   }
   const m: any = member;
+  // day_offs_quota é o saldo atual — descontado na confirmação, devolvido se
+  // uma solicitação aprovada for removida (ver app/lib/database.ts).
   return NextResponse.json({
     member,
     approver,
-    used_days: usedDays,
-    remaining_days: (m.day_offs_quota || 0) - usedDays,
-    quota: m.day_offs_quota || 0,
+    remaining_days: m.day_offs_quota || 0,
   });
 }

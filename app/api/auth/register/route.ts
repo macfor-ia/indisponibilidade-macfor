@@ -4,11 +4,18 @@ import { queries } from '../../../lib/database';
 import { cleanText } from '../../../lib/auth';
 import { loadSetores } from '../../../lib/setores';
 
+// Roles que um usuário pode se autoatribuir ao solicitar acesso. Qualquer
+// outra coisa (admin_master, admin_editor, admin_leitor) é ignorada e cai
+// para 'colaborador' — só um admin pode conceder acesso administrativo,
+// via /admin/users.
+const SELF_SERVICE_ROLES = ['colaborador', 'lider', 'socio'];
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { email, password, full_name, department } = body;
+  const { email, password, full_name, department, role: requestedRole } = body;
+  const role = SELF_SERVICE_ROLES.includes(requestedRole) ? requestedRole : 'colaborador';
 
-  console.log('[register] dados recebidos:', { email, full_name, department, password: password ? '***' : undefined });
+  console.log('[register] dados recebidos:', { email, full_name, department, role, password: password ? '***' : undefined });
 
   if (!email || !password || !full_name || !department) {
     console.warn('[register] campos faltando:', { email: !!email, password: !!password, full_name: !!full_name, department: !!department });
@@ -63,7 +70,7 @@ export async function POST(req: NextRequest) {
       full_name: cleanText(full_name),
       department,
       member_id: (member as any).id,
-      role: 'colaborador',
+      role,
     });
 
     console.log('[register] usuário criado com sucesso:', emailLower);

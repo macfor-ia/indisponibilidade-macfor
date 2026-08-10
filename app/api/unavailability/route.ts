@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queries } from '../../lib/database';
-import { requireAuth, canViewAll, countCalendarDays } from '../../lib/auth';
+import { requireAuth, canViewAll, countCalendarDays, isFridayOrSaturday } from '../../lib/auth';
 import { loadSetores } from '../../lib/setores';
 
 export async function POST(req: NextRequest) {
@@ -41,12 +41,19 @@ export async function POST(req: NextRequest) {
   if (unavailability_type === 'prolongado' && expectedDays < 5) {
     return NextResponse.json({ error: 'A solicitação de indisponibilidade deve ter no mínimo 5 dias corridos.' }, { status: 400 });
   }
+  if (unavailability_type === 'prolongado' && isFridayOrSaturday(endMs)) {
+    return NextResponse.json({ error: 'O último dia do período não pode ser sexta-feira nem sábado — o fim das férias deve cair num domingo.' }, { status: 400 });
+  }
   const existing = await queries.getUserActiveUnavailability(user!.id);
   const overlap = existing.find((r: any) => start_date <= r.end_date && r.start_date <= end_date);
   if (overlap) {
     return NextResponse.json({
       error: `Período se sobrepõe a uma solicitação ${overlap.status === 'approved' ? 'aprovada' : 'pendente'} (${overlap.start_date} a ${overlap.end_date}). Cancele ou aguarde a conclusão antes de solicitar um novo período sobreposto.`,
     }, { status: 400 });
+  }
+  const balance = await queries.getMemberBalanceForUser(user!.id);
+  if (balance !== null && expectedDays > balance) {
+    return NextResponse.json({ error: `Saldo insuficiente: você tem ${balance} dia(s) disponível(is) e está solicitando ${expectedDays}.` }, { status: 400 });
   }
   try {
     await queries.createUnavailability({

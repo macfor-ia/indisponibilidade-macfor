@@ -98,6 +98,13 @@ export function countCalendarDays(startStr: string, endStr: string) {
   return Math.round((endMs - startMs) / 86400000) + 1;
 }
 
+/** true se a data (string "YYYY-MM-DD") cair numa sexta-feira ou sábado (dias em que o período de dias corridos não pode terminar). */
+export function isFridayOrSaturday(dateStr: string) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return dow === 5 || dow === 6;
+}
+
 export function getMinRequestDate() {
   const d = new Date();
   d.setDate(d.getDate() + 15);

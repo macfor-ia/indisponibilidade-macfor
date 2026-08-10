@@ -9,11 +9,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ email: string 
   const { email } = await ctx.params;
   const member = await queries.getMemberByEmail(decodeURIComponent(email));
   if (!member) return NextResponse.json({ error: 'Membro não encontrado.' }, { status: 404 });
-  const user = await queries.getUserByEmail((member as any).email);
-  let usedDays = 0;
-  if (user) {
-    usedDays = await queries.getUsedDaysByUser(user.id);
-  }
   const m: any = member;
-  return NextResponse.json({ ...m, used_days: usedDays, remaining_days: (m.day_offs_quota || 0) - usedDays });
+  // day_offs_quota é o saldo atual — descontado na confirmação, devolvido se
+  // uma solicitação aprovada for removida (ver app/lib/database.ts).
+  return NextResponse.json({ ...m, remaining_days: m.day_offs_quota || 0 });
 }

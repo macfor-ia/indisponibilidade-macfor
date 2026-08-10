@@ -7,7 +7,7 @@ import { Calendar as PrimeCalendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { API } from '../lib/api-client';
-import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate } from '../lib/client-config';
+import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, isFridayOrSaturday } from '../lib/client-config';
 import { useToast } from '../providers';
 
 interface Props {
@@ -24,6 +24,7 @@ export function EditUnavailDialog({ visible, onHide, record, onSaved }: Props) {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [days, setDays] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [endDateError, setEndDateError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const minDate = new Date(getMinRequestDate() + 'T00:00:00');
@@ -53,14 +54,23 @@ export function EditUnavailDialog({ visible, onHide, record, onSaved }: Props) {
     if (startDate && endDate) {
       const d = countCalendarDays(toIsoDate(startDate), toIsoDate(endDate));
       setDays(d);
+      if (type === 'prolongado' && isFridayOrSaturday(toIsoDate(endDate))) {
+        setEndDateError('O último dia do período não pode ser sexta-feira nem sábado — o fim das férias deve cair num domingo.');
+      } else {
+        setEndDateError(null);
+      }
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, type]);
 
   async function save() {
     if (!record) return;
     setError(null);
     if (!startDate || !endDate) {
       setError('Datas são obrigatórias.');
+      return;
+    }
+    if (endDateError) {
+      setError(endDateError);
       return;
     }
     setSaving(true);
@@ -105,10 +115,11 @@ export function EditUnavailDialog({ visible, onHide, record, onSaved }: Props) {
           <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Total de dias</label>
           <InputText value={String(days || '')} readOnly className="w-full opacity-70" />
         </div>
+        {endDateError && <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded text-sm">{endDateError}</div>}
         {error && <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded text-sm">{error}</div>}
         <div className="flex justify-end gap-2 pt-2">
           <Button label="Cancelar" severity="secondary" outlined onClick={onHide} />
-          <Button label="Salvar alterações" onClick={save} loading={saving} />
+          <Button label="Salvar alterações" onClick={save} loading={saving} disabled={!!endDateError} />
         </div>
       </div>
     </Dialog>

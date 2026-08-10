@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from 'primereact/button';
-import { LogOut, Settings, Users, ClipboardList } from 'lucide-react';
+import { LogOut, Settings, Users, ClipboardList, CalendarDays } from 'lucide-react';
 import { useAuth } from '../providers';
 import { API } from '../lib/api-client';
 import { canViewAllRole, isMasterAdminRole } from '../lib/client-config';
@@ -56,6 +56,28 @@ export function Navbar() {
                   label="Usuários"
                   className="!text-xs !py-1"
                   onClick={() => router.push('/admin/users')}
+                />
+              )}
+              {isMaster && (
+                <Button
+                  size="small"
+                  severity="secondary"
+                  outlined={!pathname?.includes('/admin/eventos')}
+                  icon={<CalendarDays size={13} />}
+                  label="Eventos"
+                  className="!text-xs !py-1"
+                  onClick={() => router.push('/admin/eventos')}
+                />
+              )}
+              {isMaster && (
+                <Button
+                  size="small"
+                  severity="secondary"
+                  outlined={!pathname?.includes('/admin/setores')}
+                  icon={<Settings size={13} />}
+                  label="Setores"
+                  className="!text-xs !py-1"
+                  onClick={() => router.push('/admin/setores')}
                 />
               )}
             </div>

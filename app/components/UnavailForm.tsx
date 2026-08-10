@@ -5,9 +5,9 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { Calendar as PrimeCalendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
-import { User, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { User, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { API } from '../lib/api-client';
-import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, AppUser } from '../lib/client-config';
+import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, isFridayOrSaturday, AppUser } from '../lib/client-config';
 import { useSetores, useToast } from '../providers';
 import { Card } from './Card';
 
@@ -27,9 +27,25 @@ export function UnavailForm({ user, onSubmitted }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warn, setWarn] = useState<string | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
+  const [endDateError, setEndDateError] = useState<string | null>(null);
   const [memberInfo, setMemberInfo] = useState<any>(null);
+  const [checkingCredits, setCheckingCredits] = useState(false);
 
   const minDate = new Date(getMinRequestDate() + 'T00:00:00');
+
+  async function atualizarCreditos() {
+    setCheckingCredits(true);
+    try {
+      const info: any = await API.atualizarCreditos();
+      setMemberInfo((prev: any) => ({ ...prev, ...info }));
+      toast.show(info.updated ? 'Crédito de +20 dias aplicado! 🎉' : 'Nenhum crédito pendente no momento.');
+    } catch (e: any) {
+      toast.show(e.message, 'error');
+    } finally {
+      setCheckingCredits(false);
+    }
+  }
 
   function toIsoDate(d: Date | null): string {
     if (!d) return '';
@@ -57,21 +73,33 @@ export function UnavailForm({ user, onSubmitted }: Props) {
     if (!startDate || !endDate) {
       setDays(0);
       setWarn(null);
+      setBalanceError(null);
+      setEndDateError(null);
       return;
     }
     const diff = countCalendarDays(toIsoDate(startDate), toIsoDate(endDate));
     setDays(diff);
 
+    if (type === 'prolongado' && isFridayOrSaturday(toIsoDate(endDate))) {
+      setEndDateError('O último dia do período não pode ser sexta-feira nem sábado — o fim das férias deve cair num domingo.');
+    } else {
+      setEndDateError(null);
+    }
+
+    if (memberInfo && diff > 0) {
+      const remaining = memberInfo.remaining_days ?? 0;
+      if (diff > remaining) {
+        setBalanceError(`Saldo insuficiente: você tem ${remaining} dia(s) disponível(is) e está solicitando ${diff}.`);
+      } else {
+        setBalanceError(null);
+      }
+    } else {
+      setBalanceError(null);
+    }
+
     if (type === 'prolongado' && diff > 0 && diff < 5) {
       setWarn(`A solicitação deve ter no mínimo 5 dias corridos. Período atual: ${diff} dia(s).`);
       return;
-    }
-    if (memberInfo && diff > 0) {
-      const remaining = memberInfo.remaining_days ?? 0;
-      if (diff > remaining && remaining > 0) {
-        setWarn(`Atenção: você tem ${remaining} dias restantes na cota. Esta solicitação usa ${diff} dias.`);
-        return;
-      }
     }
     setWarn(null);
   }, [startDate, endDate, type, memberInfo]);
@@ -90,6 +118,16 @@ export function UnavailForm({ user, onSubmitted }: Props) {
       const msg = `A solicitação deve ter no mínimo 5 dias corridos. Período atual: ${days} dia(s).`;
       setError(msg);
       toast.show(msg, 'error');
+      return;
+    }
+    if (endDateError) {
+      setError(endDateError);
+      toast.show(endDateError, 'error');
+      return;
+    }
+    if (balanceError) {
+      setError(balanceError);
+      toast.show(balanceError, 'error');
       return;
     }
     const startStr = toIsoDate(startDate);
@@ -121,7 +159,6 @@ export function UnavailForm({ user, onSubmitted }: Props) {
   const quotaColor =
     memberInfo?.remaining_days <= 0 ? 'text-red-400' :
     memberInfo?.remaining_days <= 5 ? 'text-orange-400' : 'text-emerald-400';
-  const pctUsed = memberInfo?.quota > 0 ? Math.round((memberInfo.used_days / memberInfo.quota) * 100) : 0;
 
   return (
     <Card className="w-full">
@@ -131,21 +168,10 @@ export function UnavailForm({ user, onSubmitted }: Props) {
       </h3>
 
       {memberInfo?.member && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="p-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
-            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Cota Anual</div>
-            <div className="text-2xl font-bold font-mono">{memberInfo.quota} <span className="text-xs font-normal text-[var(--text-muted)]">dias</span></div>
-          </div>
-          <div className="p-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
-            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Dias Usados</div>
-            <div className="text-2xl font-bold font-mono text-orange-400">{memberInfo.used_days}</div>
-            <div className="h-1.5 bg-[var(--border)] rounded-full mt-2 overflow-hidden">
-              <div className="h-full bg-orange-400 transition-all" style={{ width: `${Math.min(pctUsed, 100)}%` }} />
-            </div>
-          </div>
-          <div className="p-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
-            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Dias Restantes</div>
-            <div className={`text-2xl font-bold font-mono ${quotaColor}`}>{memberInfo.remaining_days}</div>
+            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Saldo</div>
+            <div className={`text-2xl font-bold font-mono ${quotaColor}`}>{memberInfo.remaining_days} <span className="text-xs font-normal text-[var(--text-muted)]">dias</span></div>
           </div>
           {memberInfo.approver && (
             <div className="p-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
@@ -158,6 +184,20 @@ export function UnavailForm({ user, onSubmitted }: Props) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {memberInfo?.member && (
+        <div className="flex justify-end mb-5 -mt-2">
+          <Button
+            onClick={atualizarCreditos}
+            loading={checkingCredits}
+            label="Atualizar créditos"
+            icon={<RefreshCw size={13} />}
+            severity="secondary"
+            outlined
+            size="small"
+          />
         </div>
       )}
 
@@ -196,7 +236,7 @@ export function UnavailForm({ user, onSubmitted }: Props) {
               <PrimeCalendar value={endDate} onChange={(e) => setEndDate(e.value as Date)} minDate={startDate || minDate} dateFormat="dd/mm/yy" showIcon className="w-full" />
               <p className="text-[11px] text-[var(--text-muted)] mt-1.5 flex items-center gap-1">
                 <AlertTriangle size={11} className="text-yellow-400" />
-                Período mínimo de 5 dias corridos.
+                Período mínimo de 5 dias corridos, e não pode terminar numa sexta-feira ou sábado.
               </p>
             </div>
           )}
@@ -213,13 +253,25 @@ export function UnavailForm({ user, onSubmitted }: Props) {
             <span>{warn}</span>
           </div>
         )}
+        {endDateError && (
+          <div className="px-3.5 py-2.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm flex items-start gap-2">
+            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+            <span>{endDateError}</span>
+          </div>
+        )}
+        {balanceError && (
+          <div className="px-3.5 py-2.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm flex items-start gap-2">
+            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+            <span>{balanceError}</span>
+          </div>
+        )}
         {error && (
           <div className="px-3.5 py-2.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm">
             {error}
           </div>
         )}
 
-        <Button onClick={submit} loading={submitting} label="Enviar Solicitação" className="w-full justify-center" />
+        <Button onClick={submit} loading={submitting} disabled={!!balanceError || !!endDateError} label="Enviar Solicitação" className="w-full justify-center" />
       </div>
     </Card>
   );

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queries } from '../../../lib/database';
-import { requireAuth, isAdminEditor, countCalendarDays, cleanText } from '../../../lib/auth';
+import { requireAuth, isAdminEditor, countCalendarDays, isFridayOrSaturday, cleanText } from '../../../lib/auth';
 import { loadSetores } from '../../../lib/setores';
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -27,11 +27,19 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: 'A data de início deve ser pelo menos 15 dias a partir de hoje.' }, { status: 400 });
   }
   const total_days = countCalendarDays(patchStartMs, patchEndMs);
+  const effectiveType = unavailability_type || record.unavailability_type;
+  if (effectiveType === 'prolongado' && isFridayOrSaturday(patchEndMs)) {
+    return NextResponse.json({ error: 'O último dia do período não pode ser sexta-feira nem sábado — o fim das férias deve cair num domingo.' }, { status: 400 });
+  }
   const existing = await queries.getUserActiveUnavailability(record.user_id);
   const overlap = existing.find((r: any) => r.id !== record.id && start_date <= r.end_date && r.start_date <= end_date);
   if (overlap) return NextResponse.json({ error: `Período se sobrepõe a outra solicitação (${overlap.start_date} a ${overlap.end_date}).` }, { status: 400 });
   if (department && !loadSetores().includes(department)) {
     return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+  }
+  const balance = await queries.getMemberBalanceForUser(record.user_id);
+  if (balance !== null && total_days > balance) {
+    return NextResponse.json({ error: `Saldo insuficiente: disponível ${balance} dia(s), solicitado ${total_days}.` }, { status: 400 });
   }
   try {
     const updateData: any = { start_date, end_date, total_days };

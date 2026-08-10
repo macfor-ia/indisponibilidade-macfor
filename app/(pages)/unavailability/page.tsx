@@ -20,7 +20,9 @@ function UnavailPage() {
   const toast = useToast();
 
   const isAdmin = canViewAllRole(user!.role);
-  const canSeePending = isLiderRole(user!.role);
+  const isLider = isLiderRole(user!.role);
+  const canSeePending = isLider;
+  const canSeeActive = isAdmin || isLider;
 
   const [activeTab, setActiveTab] = useState(0);
   const [editRecord, setEditRecord] = useState<any>(null);
@@ -37,7 +39,7 @@ function UnavailPage() {
   const tabs: { key: string; show: boolean; label: string; icon: any }[] = [
     { key: 'overview', show: isAdmin, label: 'Painel Geral', icon: Calendar },
     { key: 'pending', show: canSeePending, label: 'Pedidos Aguardando', icon: Clock },
-    { key: 'active', show: isAdmin, label: 'Indisponíveis Agora', icon: CircleCheck },
+    { key: 'active', show: canSeeActive, label: 'Indisponíveis Agora', icon: CircleCheck },
     { key: 'form', show: true, label: 'Solicitar', icon: Plus },
     { key: 'mine', show: true, label: 'Minhas Solicitações', icon: FileText },
     { key: 'all', show: isAdmin, label: 'Histórico Completo', icon: History },

@@ -8,13 +8,17 @@ export async function POST(req: NextRequest) {
   const aErr = requireMasterAdmin(user!);
   if (aErr) return aErr;
 
-  const { name, email, area, squad, funcao, report_to, operacoes, day_offs_quota } = await req.json();
+  const { name, email, area, squad, funcao, report_to, operacoes, day_offs_quota, mes_ano_entrada } = await req.json();
   if (!name || !area || !funcao) return NextResponse.json({ error: 'Nome, área e função são obrigatórios.' }, { status: 400 });
   if (email) {
     const emailLower = email.toLowerCase().trim();
     if (!emailLower.endsWith('@macfor.com.br')) return NextResponse.json({ error: 'Email deve ser @macfor.com.br.' }, { status: 400 });
     const existing = await queries.getMemberByEmail(emailLower);
     if (existing) return NextResponse.json({ error: 'Já existe um membro com este email.' }, { status: 400 });
+  }
+  const mesAnoEntrada = mes_ano_entrada ? String(mes_ano_entrada).trim() : null;
+  if (mesAnoEntrada && !/^(0?[1-9]|1[0-2])\/\d{4}$/.test(mesAnoEntrada)) {
+    return NextResponse.json({ error: 'Mês/Ano de Entrada deve estar no formato MM/AAAA.' }, { status: 400 });
   }
   try {
     const member = await queries.createMember({
@@ -26,6 +30,7 @@ export async function POST(req: NextRequest) {
       report_to: report_to ? cleanText(report_to) : null,
       operacoes: !!operacoes,
       day_offs_quota: parseInt(day_offs_quota) || 20,
+      mes_ano_entrada: mesAnoEntrada,
     });
     return NextResponse.json({ success: true, member });
   } catch (e: any) {
