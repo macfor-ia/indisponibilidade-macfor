@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { queries } from '../../../lib/database';
 import { requireAuth, isAdmin, isLider } from '../../../lib/auth';
-import { filterUnavailabilityForLider } from '../../../lib/unavailability-helpers';
+import { filterUnavailabilityByReportTo } from '../../../lib/unavailability-helpers';
 
 export async function GET() {
   const { user, response } = await requireAuth();
@@ -20,14 +20,18 @@ export async function GET() {
     return list.map((r: any) => ({ ...r, event_conflicts: conflicts[r.id] || [] }));
   }
 
-  if (isAdmin(user!.role) || user!.role === 'socio') {
+  if (isAdmin(user!.role)) {
     return NextResponse.json(await attachConflicts(allPending));
   }
   if (!allPending.length) return NextResponse.json([]);
 
-  // Líder não vê o próprio pedido nesta fila de aprovação (ele acompanha o
-  // status dele em "Minhas Solicitações").
+  // Nem líder nem sócio veem o próprio pedido nesta fila de aprovação (cada
+  // um acompanha o status do seu em "Minhas Solicitações").
   const othersPending = allPending.filter((r: any) => r.user_id !== user!.id);
-  const filtered = await filterUnavailabilityForLider(othersPending, user!);
+
+  // Solicitação só aparece pra quem está no report_to do solicitante — vale
+  // igual pra líder e sócio, mesmo critério de canApproveUnavailability, pra
+  // aba bater com o que cada um consegue de fato confirmar/reavaliar.
+  const filtered = await filterUnavailabilityByReportTo(othersPending, user!);
   return NextResponse.json(await attachConflicts(filtered));
 }

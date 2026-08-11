@@ -21,7 +21,9 @@ function UnavailPage() {
 
   const isAdmin = canViewAllRole(user!.role);
   const isLider = isLiderRole(user!.role);
-  const canSeePending = isLider;
+  const isSocio = user!.role === 'socio';
+  // Sócio também aprova via report_to (igual líder), então também ganha a aba.
+  const canSeePending = isLider || isSocio;
   const canSeeActive = isAdmin || isLider;
 
   const [activeTab, setActiveTab] = useState(0);

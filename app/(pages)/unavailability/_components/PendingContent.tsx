@@ -53,7 +53,7 @@ export function PendingContent({ items, onApprove, onReject, onEdit, onDelete, o
     );
   }
 
-  const canApprove = isEditorRole(user!.role) || isLiderRole(user!.role);
+  const canApprove = isEditorRole(user!.role) || isLiderRole(user!.role) || user!.role === 'socio';
 
   return (
     <>
