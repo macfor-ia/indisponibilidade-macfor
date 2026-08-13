@@ -16,7 +16,10 @@ export function Navbar() {
   async function logout() {
     await API.logout().catch(() => {});
     await refresh();
-    router.push('/login');
+    // Navegação "por dentro" (client-side) pro /login trava contra o CDN da
+    // Hostinger (fica em "This page couldn't load" até dar reload) — então
+    // aqui força um carregamento de página completo, que funciona.
+    window.location.href = '/login';
   }
 
   const isAdmin = user ? canViewAllRole(user.role) : false;

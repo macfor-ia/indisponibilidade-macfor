@@ -16,8 +16,11 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) router.replace('/unavailability');
-  }, [user, loading, router]);
+    // Navegação "por dentro" (client-side) direto do /login trava contra o
+    // CDN da Hostinger (fica em "This page couldn't load" até dar reload) —
+    // então aqui força um carregamento de página completo, que funciona.
+    if (!loading && user) window.location.replace('/unavailability');
+  }, [user, loading]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,7 +29,7 @@ export default function LoginPage() {
     try {
       await API.login(email, password);
       await refresh();
-      router.push('/unavailability');
+      window.location.href = '/unavailability';
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer login.');
     } finally {
