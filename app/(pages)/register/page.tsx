@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
@@ -11,7 +10,6 @@ import { ROLE_LABELS } from '../../lib/client-config';
 const SELF_SERVICE_ROLES = ['colaborador', 'lider', 'socio'];
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [form, setForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '', department: '', role: 'colaborador' });
   const [setores, setSetores] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -70,7 +68,7 @@ export default function RegisterPage() {
             <div className="text-4xl mb-4">✓</div>
             <h2 className="text-xl font-bold mb-2">Solicitação enviada!</h2>
             <p className="text-[var(--text-muted)] text-sm mb-6">Aguarde a aprovação de um administrador.</p>
-            <Button label="Ir para login" onClick={() => router.push('/login')} />
+            <Button label="Ir para login" onClick={() => { window.location.href = '/login'; }} />
           </div>
         </div>
       </div>
@@ -134,7 +132,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-[var(--text-muted)] mt-4">
           Já tem conta?{' '}
-          <button className="text-[var(--accent)] hover:underline" onClick={() => router.push('/login')}>
+          <button className="text-[var(--accent)] hover:underline" onClick={() => { window.location.href = '/login'; }}>
             Fazer login
           </button>
         </p>

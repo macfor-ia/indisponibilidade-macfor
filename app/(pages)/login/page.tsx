@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { API } from '../../lib/api-client';
 import { useAuth } from '../../providers';
 
 export default function LoginPage() {
-  const router = useRouter();
   const { user, loading, refresh } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -77,7 +75,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-[var(--text-muted)] mt-4">
           Não tem conta?{' '}
-          <button className="text-[var(--accent)] hover:underline" onClick={() => router.push('/register')}>
+          <button className="text-[var(--accent)] hover:underline" onClick={() => { window.location.href = '/register'; }}>
             Solicitar acesso
           </button>
         </p>
