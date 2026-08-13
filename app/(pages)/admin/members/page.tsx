@@ -25,7 +25,8 @@ interface Member {
   area?: string | null;
   squad?: string | null;
   funcao?: string | null;
-  report_to?: string | null;
+  report_to_name?: string | null;
+  report_to_email?: string | null;
   operacoes?: boolean;
   day_offs_quota?: number;
   mes_ano_entrada?: string | null;
@@ -73,17 +74,18 @@ function AdminMembersPage() {
     return f;
   }, [members, search, filterArea]);
 
-  function reportToNames(report_to?: string | null) {
-    if (!report_to) return '-';
+  function reportToNames(m: Member) {
     const emailToName: Record<string, string> = {};
-    members.forEach((m) => { if (m.email) emailToName[m.email.toLowerCase()] = m.name; });
-    const names = report_to.split(/[,;]/).map((s) => s.trim().toLowerCase()).filter(Boolean)
+    members.forEach((x) => { if (x.email) emailToName[x.email.toLowerCase()] = x.name; });
+    const fromEmails = (m.report_to_email || '').split(/[,;]/).map((s) => s.trim().toLowerCase()).filter(Boolean)
       .map((e) => emailToName[e] || e);
+    const fromNames = (m.report_to_name || '').split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+    const names = [...new Set([...fromEmails, ...fromNames])];
     return names.join(', ') || '-';
   }
 
   function openEdit(m: Member | null) {
-    setEditing(m || { id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
+    setEditing(m || { id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to_name: '', report_to_email: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
     setEditOpen(true);
   }
 
@@ -161,7 +163,7 @@ function AdminMembersPage() {
                       {m.area || '-'}
                       {m.squad && <div className="text-[11px] text-[var(--text-muted)]">{m.squad}</div>}
                     </td>
-                    <td className="px-3 py-2 text-xs text-[var(--text-muted)]">{reportToNames(m.report_to)}</td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-muted)]">{reportToNames(m)}</td>
                     <td className="px-3 py-2 text-center text-xs text-[var(--text-muted)]">{m.mes_ano_entrada || '-'}</td>
                     <td className="px-3 py-2 text-center text-xs">{m.day_offs_quota ?? '-'}</td>
                     <td className="px-3 py-2 text-center">
@@ -185,7 +187,7 @@ function AdminMembersPage() {
 
 function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { visible: boolean; onHide: () => void; member: Member | null; members: Member[]; setores: string[]; onSaved: () => void }) {
   const toast = useToast();
-  const [form, setForm] = useState<Member>({ id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
+  const [form, setForm] = useState<Member>({ id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to_name: '', report_to_email: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
   const [approverFilter, setApproverFilter] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -196,14 +198,27 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
     }
   }, [visible, member]);
 
-  function toggleApprover(email: string) {
-    const cur = (form.report_to || '').split(/[,;]/).map((s) => s.trim().toLowerCase()).filter(Boolean);
-    const idx = cur.indexOf(email.toLowerCase());
-    if (idx >= 0) cur.splice(idx, 1); else cur.push(email.toLowerCase());
-    setForm({ ...form, report_to: cur.join(', ') });
+  // Selecionar um aprovador na lista grava e-mail e nome dele juntos, um em
+  // cada coluna (report_to_email / report_to_name) — as duas ficam em par
+  // pra cada aprovador escolhido aqui.
+  function toggleApprover(approver: Member) {
+    const email = (approver.email || '').toLowerCase();
+    if (!email) return;
+    const curEmails = (form.report_to_email || '').split(/[,;]/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+    const curNames = (form.report_to_name || '').split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+    const idx = curEmails.indexOf(email);
+    if (idx >= 0) {
+      curEmails.splice(idx, 1);
+      const nameIdx = curNames.findIndex((n) => n.toLowerCase() === approver.name.toLowerCase());
+      if (nameIdx >= 0) curNames.splice(nameIdx, 1);
+    } else {
+      curEmails.push(email);
+      curNames.push(approver.name);
+    }
+    setForm({ ...form, report_to_email: curEmails.join(', '), report_to_name: curNames.join(', ') });
   }
 
-  const selectedApprovers = new Set((form.report_to || '').split(/[,;]/).map((s) => s.trim().toLowerCase()).filter(Boolean));
+  const selectedApprovers = new Set((form.report_to_email || '').split(/[,;]/).map((s) => s.trim().toLowerCase()).filter(Boolean));
   const eligibleApprovers = members
     .filter((m) => m.id !== form.id && m.email)
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -231,7 +246,8 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
         area: form.area,
         funcao: form.funcao,
         squad: form.squad || null,
-        report_to: form.report_to || null,
+        report_to_name: form.report_to_name || null,
+        report_to_email: form.report_to_email || null,
         day_offs_quota: form.day_offs_quota,
         operacoes: !!form.operacoes,
         mes_ano_entrada: mesAnoEntrada || null,
@@ -305,7 +321,7 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
           <div className="max-h-52 overflow-y-auto border border-[var(--border)] rounded">
             {eligibleApprovers.map((m) => (
               <label key={m.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-[var(--surface)] cursor-pointer">
-                <Checkbox checked={selectedApprovers.has((m.email || '').toLowerCase())} onChange={() => toggleApprover(m.email || '')} />
+                <Checkbox checked={selectedApprovers.has((m.email || '').toLowerCase())} onChange={() => toggleApprover(m)} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs">{m.name}</div>
                   <div className="text-[10px] text-[var(--text-muted)]">{m.email}</div>

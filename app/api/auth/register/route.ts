@@ -14,10 +14,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { email, password, full_name, department, role: requestedRole } = body;
   const role = SELF_SERVICE_ROLES.includes(requestedRole) ? requestedRole : 'colaborador';
+  // Sócio não pertence a um setor específico — só colaborador/líder precisam escolher um.
+  const isSocio = role === 'socio';
 
   console.log('[register] dados recebidos:', { email, full_name, department, role, password: password ? '***' : undefined });
 
-  if (!email || !password || !full_name || !department) {
+  if (!email || !password || !full_name || (!isSocio && !department)) {
     console.warn('[register] campos faltando:', { email: !!email, password: !!password, full_name: !!full_name, department: !!department });
     return NextResponse.json({ error: 'Todos os campos são obrigatórios.' }, { status: 400 });
   }
@@ -25,10 +27,12 @@ export async function POST(req: NextRequest) {
   if (!emailLower.endsWith('@macfor.com.br')) {
     return NextResponse.json({ error: 'Apenas emails @macfor.com.br podem se registrar.' }, { status: 400 });
   }
-  const validDepts = loadSetores();
-  console.log('[register] setores válidos:', validDepts);
-  if (!validDepts.includes(department)) {
-    return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+  if (!isSocio) {
+    const validDepts = loadSetores();
+    console.log('[register] setores válidos:', validDepts);
+    if (!validDepts.includes(department)) {
+      return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+    }
   }
   if (password.length < 6) {
     return NextResponse.json({ error: 'Senha deve ter pelo menos 6 caracteres.' }, { status: 400 });
@@ -51,10 +55,11 @@ export async function POST(req: NextRequest) {
       member = await queries.createMember({
         name: cleanText(full_name),
         email: emailLower,
-        area: department,
+        area: isSocio ? null : department,
         squad: null,
         funcao: null,
-        report_to: null,
+        report_to_name: null,
+        report_to_email: null,
         operacoes: true,
         day_offs_quota: 20,
       });
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
       email: emailLower,
       password: hash,
       full_name: cleanText(full_name),
-      department,
+      department: isSocio ? null : department,
       member_id: (member as any).id,
       role,
     });

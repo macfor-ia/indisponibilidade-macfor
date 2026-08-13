@@ -1,28 +1,33 @@
 import { queries } from './database';
 import { isAdminEditor, isLider, isMasterAdmin, AuthUser } from './auth';
 
-export function parseReportTo(report_to: string | null | undefined): string[] {
-  if (!report_to) return [];
-  return report_to
+export function parseReportTo(value: string | null | undefined): string[] {
+  if (!value) return [];
+  return value
     .split(/[,;]/)
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
 }
 
+/**
+ * Compara separadamente por e-mail (report_to_email) e por nome
+ * (report_to_name) — cada coluna guarda sua própria lista de aprovadores
+ * (separados por vírgula/ponto e vírgula), e basta bater em uma das duas
+ * (OU) pra considerar aprovador. Comparação continua exata (trim+lowercase);
+ * por isso o e-mail é a via confiável, o nome é um complemento pra quem
+ * ainda não tem e-mail cadastrado como aprovador.
+ */
 export function reportToMatchesLider(
-  report_to: string | null | undefined,
+  reportToEmail: string | null | undefined,
+  reportToName: string | null | undefined,
   liderEmail: string | null | undefined,
   liderName: string | null | undefined,
 ): boolean {
-  const parts = parseReportTo(report_to);
-  if (!parts.length) return false;
   const emailLower = liderEmail ? liderEmail.toLowerCase() : null;
   const nameLower = liderName ? liderName.toLowerCase() : null;
-  return parts.some((p) => {
-    if (emailLower && p === emailLower) return true;
-    if (nameLower && p === nameLower) return true;
-    return false;
-  });
+  if (emailLower && parseReportTo(reportToEmail).includes(emailLower)) return true;
+  if (nameLower && parseReportTo(reportToName).includes(nameLower)) return true;
+  return false;
 }
 
 /**
@@ -81,10 +86,10 @@ async function batchLoadUsersAndMembers(list: { user_id: number }[]) {
  * Agora") para o que um líder pode VER: pessoas que estão no mesmo department
  * (tabela users5) E que têm pelo menos um squad em comum (tabela members,
  * coluna squad pode ter vários valores separados por vírgula) com o próprio
- * líder, e/ou pessoas cujo report_to (tabela members) aponta pra ele — é OU,
- * não E. Isso é só visualização geral — não confundir com a fila de aprovação
- * (filterUnavailabilityByReportTo) nem com quem ele pode aprovar
- * (canApproveUnavailability), que usam só report_to.
+ * líder, e/ou pessoas cujo report_to_email/report_to_name (tabela members)
+ * aponta pra ele — é OU, não E. Isso é só visualização geral — não confundir
+ * com a fila de aprovação (filterUnavailabilityByReportTo) nem com quem ele
+ * pode aprovar (canApproveUnavailability), que usam só report_to_email/name.
  */
 export async function filterUnavailabilityForLider<T extends { user_id: number }>(
   list: T[],
@@ -106,7 +111,7 @@ export async function filterUnavailabilityForLider<T extends { user_id: number }
 
     const sameDeptAndSquad = !!liderUser.department && u.department === liderUser.department
       && !!member && squadsOverlap(liderSquad, member.squad);
-    const reportsToLider = !!member && reportToMatchesLider(member.report_to, liderUser.email, liderName);
+    const reportsToLider = !!member && reportToMatchesLider(member.report_to_email, member.report_to_name, liderUser.email, liderName);
 
     return sameDeptAndSquad || reportsToLider;
   });
@@ -114,8 +119,8 @@ export async function filterUnavailabilityForLider<T extends { user_id: number }
 
 /**
  * Filtra uma lista de solicitações para o que approverUser (líder ou sócio)
- * pode efetivamente APROVAR: nome/email dele presente no report_to do member
- * do solicitante. Mesmo critério usado em canApproveUnavailability — usada
+ * pode efetivamente APROVAR: nome/email dele presente no report_to_name/
+ * report_to_email do member do solicitante. Mesmo critério usado em canApproveUnavailability — usada
  * pra fila de aprovação do sócio, onde "o que aparece na aba" precisa bater
  * com "o que dá pra confirmar/reavaliar".
  */
@@ -134,14 +139,14 @@ export async function filterUnavailabilityByReportTo<T extends { user_id: number
     const u = userById[r.user_id];
     if (!u) return false;
     const member = getMember(u);
-    return member ? reportToMatchesLider(member.report_to, approverUser.email, approverName) : false;
+    return member ? reportToMatchesLider(member.report_to_email, member.report_to_name, approverUser.email, approverName) : false;
   });
 }
 
 /**
  * Decide quem pode aprovar/rejeitar uma solicitação. Para líder e sócio, a
- * regra é a mesma: o nome (ou email) dele precisa estar no report_to do
- * member do solicitante — não basta estar no mesmo setor/squad (isso só
+ * regra é a mesma: o nome (ou email) dele precisa estar no report_to_name
+ * (ou report_to_email) do member do solicitante — não basta estar no mesmo setor/squad (isso só
  * vale pra visualização do líder, ver filterUnavailabilityForLider).
  */
 export async function canApproveUnavailability(approverUser: AuthUser, record: any): Promise<boolean> {
@@ -158,9 +163,9 @@ export async function canApproveUnavailability(approverUser: AuthUser, record: a
     if (!requesterMember && requester.email) {
       requesterMember = await queries.getMemberByEmail(requester.email.toLowerCase());
     }
-    if (requesterMember?.report_to) {
+    if (requesterMember?.report_to_email || requesterMember?.report_to_name) {
       const approverMember: any = await queries.getMemberByEmail(approverUser.email.toLowerCase());
-      return reportToMatchesLider(requesterMember.report_to, approverUser.email, approverMember?.name);
+      return reportToMatchesLider(requesterMember.report_to_email, requesterMember.report_to_name, approverUser.email, approverMember?.name);
     }
   }
   return false;

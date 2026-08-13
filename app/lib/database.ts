@@ -69,13 +69,13 @@ export const queries = {
   },
   getMembersByIds: async (ids: number[]) => {
     if (!ids || !ids.length) return [];
-    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to').in('id', ids);
+    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to_name, report_to_email').in('id', ids);
     if (res.error) return [];
     return res.data || [];
   },
   getMembersByEmails: async (emails: string[]) => {
     if (!emails || !emails.length) return [];
-    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to').in('email', emails);
+    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to_name, report_to_email').in('email', emails);
     if (res.error) return [];
     return res.data || [];
   },
@@ -175,23 +175,31 @@ export const queries = {
     const res = await supabase.from(MEMBERS_TABLE).delete().eq('id', id);
     if (res.error) throw res.error;
   },
+  /**
+   * Aprovador(es) do member desse email: bate por report_to_email (contra o
+   * email do próprio possível aprovador) OU por report_to_name (contra o
+   * nome dele) — as duas colunas são checadas independentemente (OU).
+   */
   getApproverForMember: async (email: string) => {
-    const memberRes = await supabase.from(MEMBERS_TABLE).select('report_to').eq('email', email).single();
+    const memberRes = await supabase.from(MEMBERS_TABLE).select('report_to_email, report_to_name').eq('email', email).single();
     if (memberRes.error || !memberRes.data) return null;
-    const { report_to } = memberRes.data as any;
-    if (!report_to) return null;
-    const approverEmails = report_to.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter((s: string) => s.includes('@'));
-    if (!approverEmails.length) return null;
-    const res = await supabase.from(MEMBERS_TABLE).select('*').in('email', approverEmails);
-    const approvers = res.data || [];
+    const { report_to_email, report_to_name } = memberRes.data as any;
+    const approverEmails = report_to_email ? report_to_email.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter((s: string) => s.includes('@')) : [];
+    const approverNames = report_to_name ? report_to_name.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean) : [];
+    if (!approverEmails.length && !approverNames.length) return null;
+    const res = await supabase.from(MEMBERS_TABLE).select('*');
+    const approvers = (res.data || []).filter((m: any) =>
+      (m.email && approverEmails.includes(m.email.toLowerCase())) ||
+      (m.name && approverNames.includes(m.name.toLowerCase()))
+    );
     return approvers.length === 1 ? approvers[0] : approvers.length > 1 ? approvers : null;
   },
   getApproverEmailsForMember: async (email: string) => {
-    const memberRes = await supabase.from(MEMBERS_TABLE).select('report_to').eq('email', email).single();
+    const memberRes = await supabase.from(MEMBERS_TABLE).select('report_to_email').eq('email', email).single();
     if (memberRes.error || !memberRes.data) return [];
-    const { report_to } = memberRes.data as any;
-    if (!report_to) return [];
-    return report_to.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+    const { report_to_email } = memberRes.data as any;
+    if (!report_to_email) return [];
+    return report_to_email.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean);
   },
   getMembersEmailsReportingTo: async (liderEmail: string) => {
     if (!liderEmail) return [];
@@ -199,17 +207,17 @@ export const queries = {
     const liderRes = await supabase.from(MEMBERS_TABLE).select('name').eq('email', liderEmailLower).single();
     const liderName = (liderRes.data as any)?.name?.toLowerCase() || null;
 
-    const res = await supabase.from(MEMBERS_TABLE).select('email, report_to');
+    const res = await supabase.from(MEMBERS_TABLE).select('email, report_to_email, report_to_name');
     if (res.error) return [];
 
     return (res.data || []).filter((m: any) => {
-      if (!m.report_to) return false;
-      const parts = m.report_to.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean);
-      return parts.some((p: string) => {
-        if (p === liderEmailLower) return true;
-        if (liderName && p === liderName) return true;
-        return false;
-      });
+      const emailParts = m.report_to_email ? m.report_to_email.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean) : [];
+      if (emailParts.includes(liderEmailLower)) return true;
+      if (liderName) {
+        const nameParts = m.report_to_name ? m.report_to_name.split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean) : [];
+        if (nameParts.includes(liderName)) return true;
+      }
+      return false;
     }).map((m: any) => m.email?.toLowerCase()).filter(Boolean);
   },
 

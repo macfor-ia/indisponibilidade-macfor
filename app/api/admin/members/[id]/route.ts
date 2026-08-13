@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!existing) return NextResponse.json({ error: 'Membro não encontrado.' }, { status: 404 });
 
   const body = await req.json();
-  const { name, email, area, squad, funcao, report_to, operacoes, day_offs_quota, mes_ano_entrada } = body;
+  const { name, email, area, squad, funcao, report_to_name, report_to_email, operacoes, day_offs_quota, mes_ano_entrada } = body;
   if (!name || !area || !funcao) return NextResponse.json({ error: 'Nome, área e função são obrigatórios.' }, { status: 400 });
   if (email) {
     const emailLower = email.toLowerCase().trim();
@@ -32,7 +32,8 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
       area: cleanText(area),
       squad: squad ? cleanText(squad) : null,
       funcao: cleanText(funcao),
-      report_to: report_to ? cleanText(report_to) : null,
+      report_to_name: report_to_name ? cleanText(report_to_name) : null,
+      report_to_email: report_to_email ? cleanText(report_to_email) : null,
       operacoes: !!operacoes,
       day_offs_quota: parseInt(day_offs_quota) || 20,
       mes_ano_entrada: mesAnoEntrada,
