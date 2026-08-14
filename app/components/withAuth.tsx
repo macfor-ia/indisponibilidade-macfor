@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, ComponentType } from 'react';
-import { useRouter } from 'next/navigation';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { useAuth } from '../providers';
 
@@ -11,18 +10,21 @@ export function withAuth<P extends object>(
 ) {
   function ProtectedComponent(props: P) {
     const { user, loading } = useAuth();
-    const router = useRouter();
 
     useEffect(() => {
       if (loading) return;
+      // Navegação "por dentro" (client-side) trava contra o CDN da Hostinger
+      // (fica em "This page couldn't load" até dar reload) — então aqui
+      // força um carregamento de página completo, que funciona. Ver
+      // app/(pages)/login/page.tsx pro motivo completo.
       if (!user) {
-        router.replace('/login');
+        window.location.replace('/login');
         return;
       }
       if (roleCheck && !roleCheck(user.role)) {
-        router.replace('/unavailability');
+        window.location.replace('/unavailability');
       }
-    }, [user, loading, router]);
+    }, [user, loading]);
 
     if (loading || !user) {
       return (

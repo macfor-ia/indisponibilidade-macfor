@@ -1,23 +1,11 @@
-'use client';
+import { HomeClient } from './HomeClient';
 
-import { useEffect } from 'react';
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { useAuth } from './providers';
+// Página de entrada — nunca pode ficar em cache de longo prazo na CDN (ver
+// app/(pages)/login/page.tsx pro motivo completo), senão visitas diferentes
+// caem em cópias desencontradas de deploys antigos. Esse export só funciona
+// vindo de um Server Component — por isso a UI real mora em HomeClient.tsx.
+export const dynamic = 'force-dynamic';
 
 export default function Home() {
-  const { user, loading } = useAuth();
-
-  useEffect(() => {
-    if (loading) return;
-    // Navegação "por dentro" (client-side) direto da raiz trava contra o CDN
-    // da Hostinger (fica em "This page couldn't load" até dar reload) —
-    // então aqui força um carregamento de página completo, que funciona.
-    window.location.replace(user ? '/unavailability' : '/login');
-  }, [user, loading]);
-
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <ProgressSpinner strokeWidth="3" />
-    </div>
-  );
+  return <HomeClient />;
 }
