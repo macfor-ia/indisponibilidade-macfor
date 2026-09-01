@@ -33,6 +33,16 @@ export async function POST(req: NextRequest) {
     session.userId = user.id;
     await session.save();
 
+    // Checagem automática de crédito anual de +20 dias por tempo de casa
+    // (ver app/lib/day-off-credits.ts). Não deve impedir o login se falhar.
+    try {
+      await queries.checkAndApplyDayOffCredit(user.email);
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[login] falha ao checar crédito de day off:', err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role },

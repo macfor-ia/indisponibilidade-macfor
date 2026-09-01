@@ -148,9 +148,9 @@ export const queries = {
     return res.data;
   },
   /**
-   * Checagem manual (botão "Atualizar créditos" na aba Solicitar): confere
-   * se o membro tem um crédito anual de +20 dias pendente (ver regra em
-   * ./day-off-credits.ts) e aplica se houver. Retorna { updated, member }.
+   * Checagem automática (acionada a cada login, ver app/api/auth/login/route.ts):
+   * confere se o membro tem um crédito anual de +20 dias pendente (ver regra
+   * em ./day-off-credits.ts) e aplica se houver. Retorna { updated, member }.
    */
   checkAndApplyDayOffCredit: async (email: string) => {
     const member = await queries.getMemberByEmail(email);

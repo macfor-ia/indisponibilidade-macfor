@@ -59,7 +59,6 @@ export const API = {
   getMembers: () => request('GET', '/api/members'),
   getMemberByEmail: (email: string) => request('GET', `/api/members/by-email/${encodeURIComponent(email)}`),
   getMyMemberInfo: () => request('GET', '/api/members/me'),
-  atualizarCreditos: () => request('POST', '/api/members/me/atualizar-creditos'),
   createMember: (data: unknown) => request('POST', '/api/admin/members', data),
   updateMember: (id: number, data: unknown) => request('PUT', `/api/admin/members/${id}`, data),
   deleteMember: (id: number) => request('DELETE', `/api/admin/members/${id}`),

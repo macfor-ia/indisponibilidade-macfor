@@ -10,12 +10,12 @@
 // completo) nada é somado. Em Jan/2028 (2 anos completos) soma +20. Em
 // Jan/2029 (3 anos completos) soma mais +20, e assim sucessivamente.
 //
-// Não é automático: é acionado manualmente pelo membro através do botão
-// "Atualizar créditos" (aba Solicitar). O cálculo é baseado no tempo total
-// decorrido desde a entrada, não no mês em que o clique acontece — ou seja,
-// não é preciso clicar exatamente no mês de aniversário. Se o membro passar
-// um ou mais aniversários sem clicar, os créditos pendentes se acumulam e são
-// aplicados de uma vez no próximo clique (nenhum aniversário fica perdido).
+// É automático: acionado a cada login do membro (ver app/api/auth/login/route.ts).
+// O cálculo é baseado no tempo total decorrido desde a entrada, não na data
+// em que o login acontece — ou seja, não é preciso logar exatamente no mês de
+// aniversário. Se o membro passar um ou mais aniversários sem logar, os
+// créditos pendentes se acumulam e são aplicados de uma vez no próximo login
+// (nenhum aniversário fica perdido).
 //
 // A coluna `ultimo_credito_em` guarda a data REAL (de hoje) em que o último
 // crédito foi de fato concedido — fica null enquanto nenhum crédito nunca foi

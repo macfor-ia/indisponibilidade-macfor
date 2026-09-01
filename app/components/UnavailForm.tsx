@@ -5,7 +5,7 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { Calendar as PrimeCalendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
-import { User, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { User, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { API } from '../lib/api-client';
 import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, isFridayOrSaturday, AppUser } from '../lib/client-config';
 import { useSetores, useToast } from '../providers';
@@ -30,22 +30,8 @@ export function UnavailForm({ user, onSubmitted }: Props) {
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const [endDateError, setEndDateError] = useState<string | null>(null);
   const [memberInfo, setMemberInfo] = useState<any>(null);
-  const [checkingCredits, setCheckingCredits] = useState(false);
 
   const minDate = new Date(getMinRequestDate() + 'T00:00:00');
-
-  async function atualizarCreditos() {
-    setCheckingCredits(true);
-    try {
-      const info: any = await API.atualizarCreditos();
-      setMemberInfo((prev: any) => ({ ...prev, ...info }));
-      toast.show(info.updated ? 'Crédito de +20 dias aplicado! 🎉' : 'Nenhum crédito pendente no momento.');
-    } catch (e: any) {
-      toast.show(e.message, 'error');
-    } finally {
-      setCheckingCredits(false);
-    }
-  }
 
   function toIsoDate(d: Date | null): string {
     if (!d) return '';
@@ -170,19 +156,7 @@ export function UnavailForm({ user, onSubmitted }: Props) {
       {memberInfo?.member && (
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="p-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
-            <div className="flex items-center justify-between mb-1">
-              <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Saldo</div>
-              <Button
-                onClick={atualizarCreditos}
-                loading={checkingCredits}
-                label="Atualizar créditos"
-                icon={<RefreshCw size={11} />}
-                severity="secondary"
-                text
-                size="small"
-                className="!p-0 !text-[11px] !text-[var(--text-muted)] hover:!text-[var(--text)]"
-              />
-            </div>
+            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Saldo</div>
             <div className={`text-2xl font-bold font-mono ${quotaColor}`}>{memberInfo.remaining_days} <span className="text-xs font-normal text-[var(--text-muted)]">dias</span></div>
           </div>
           {memberInfo.approver && (
