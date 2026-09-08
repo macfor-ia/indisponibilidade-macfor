@@ -23,8 +23,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const patchEndMs = Date.UTC(pey, pem - 1, ped);
   const nowP = new Date();
   const todayMsP = Date.UTC(nowP.getUTCFullYear(), nowP.getUTCMonth(), nowP.getUTCDate());
-  if (patchStartMs < todayMsP + 15 * 86400000) {
-    return NextResponse.json({ error: 'A data de início deve ser pelo menos 15 dias a partir de hoje.' }, { status: 400 });
+  if (patchStartMs < todayMsP) {
+    return NextResponse.json({ error: 'A data de início não pode ser uma data passada.' }, { status: 400 });
   }
   const total_days = countCalendarDays(patchStartMs, patchEndMs);
   const effectiveType = unavailability_type || record.unavailability_type;

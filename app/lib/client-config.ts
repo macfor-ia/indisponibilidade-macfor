@@ -105,8 +105,8 @@ export function isFridayOrSaturday(dateStr: string) {
   return dow === 5 || dow === 6;
 }
 
+/** Data mínima para início de uma solicitação: hoje (não é permitido solicitar para uma data passada). */
 export function getMinRequestDate() {
   const d = new Date();
-  d.setDate(d.getDate() + 15);
-  return d.toISOString().split('T')[0];
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }

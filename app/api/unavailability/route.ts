@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
   }
   const now = new Date();
   const todayMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  if (startMs < todayMs + 15 * 86400000) {
-    return NextResponse.json({ error: 'A data de início deve ser pelo menos 15 dias a partir de hoje.' }, { status: 400 });
+  if (startMs < todayMs) {
+    return NextResponse.json({ error: 'A data de início não pode ser uma data passada.' }, { status: 400 });
   }
   const expectedDays = countCalendarDays(startMs, endMs);
   if (parseInt(total_days) !== expectedDays) {

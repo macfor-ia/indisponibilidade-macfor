@@ -118,7 +118,7 @@ export function UnavailForm({ user, onSubmitted }: Props) {
     }
     const startStr = toIsoDate(startDate);
     if (startStr < getMinRequestDate()) {
-      setError('A data de início deve ser pelo menos 15 dias a partir de hoje.');
+      setError('A data de início não pode ser uma data passada.');
       return;
     }
     setSubmitting(true);
