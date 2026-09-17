@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { queries } from '../../../../lib/database';
 import { requireAuth, requireMasterAdmin, cleanText } from '../../../../lib/auth';
-import { loadSetores } from '../../../../lib/setores';
+import { listDistinctSquads } from '../../../../lib/squads';
 
 export async function POST(req: NextRequest) {
   const { user, response } = await requireAuth();
@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
   if (!emailLower.endsWith('@macfor.com.br')) {
     return NextResponse.json({ error: 'Apenas emails @macfor.com.br são permitidos.' }, { status: 400 });
   }
-  const validDepts = loadSetores();
-  if (!validDepts.includes(department)) {
-    return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+  const validSquads = listDistinctSquads(await queries.getAllMembers());
+  if (!validSquads.includes(department)) {
+    return NextResponse.json({ error: 'Squad inválido.' }, { status: 400 });
   }
   const validRoles = ['admin_editor', 'admin_leitor', 'socio', 'colaborador', 'lider'];
   if (!validRoles.includes(role)) {

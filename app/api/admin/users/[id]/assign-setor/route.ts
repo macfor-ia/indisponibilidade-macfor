@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queries } from '../../../../../lib/database';
 import { requireAuth, requireMasterAdmin, isMasterAdmin } from '../../../../../lib/auth';
-import { loadSetores } from '../../../../../lib/setores';
+import { listDistinctSquads } from '../../../../../lib/squads';
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAuth();
@@ -13,8 +13,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const userId = parseInt(id);
   const { setor, is_lider } = await req.json();
   if (setor !== null && setor !== undefined && setor !== '') {
-    const list = loadSetores();
-    if (!list.includes(setor)) return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+    const list = listDistinctSquads(await queries.getAllMembers());
+    if (!list.includes(setor)) return NextResponse.json({ error: 'Squad inválido.' }, { status: 400 });
   }
   const target = await queries.getUserById(userId);
   if (!target) return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 });

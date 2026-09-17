@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { queries } from '../../../lib/database';
 import { cleanText } from '../../../lib/auth';
-import { loadSetores } from '../../../lib/setores';
+import { listDistinctSquads, parseSquadKey } from '../../../lib/squads';
 
 // Roles que um usuário pode se autoatribuir ao solicitar acesso. Qualquer
 // outra coisa (admin_master, admin_editor, admin_leitor) é ignorada e cai
@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Apenas emails @macfor.com.br podem se registrar.' }, { status: 400 });
   }
   if (!isSocio) {
-    const validDepts = loadSetores();
-    console.log('[register] setores válidos:', validDepts);
-    if (!validDepts.includes(department)) {
-      return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+    const validSquads = listDistinctSquads(await queries.getAllMembers());
+    console.log('[register] squads válidos:', validSquads);
+    if (!validSquads.includes(department)) {
+      return NextResponse.json({ error: 'Squad inválido.' }, { status: 400 });
     }
   }
   if (password.length < 6) {
@@ -52,11 +52,12 @@ export async function POST(req: NextRequest) {
     let member = await queries.getMemberByEmail(emailLower);
     if (!member) {
       console.log('[register] membro não encontrado, criando novo...');
+      const { area, squad } = isSocio ? { area: null, squad: null } : parseSquadKey(department);
       member = await queries.createMember({
         name: cleanText(full_name),
         email: emailLower,
-        area: isSocio ? null : department,
-        squad: null,
+        area,
+        squad,
         funcao: null,
         report_to_name: null,
         report_to_email: null,

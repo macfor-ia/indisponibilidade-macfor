@@ -58,10 +58,20 @@ function AdminMembersPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const allAreas = useMemo(() => [...new Set(members.map((m) => m.area).filter(Boolean) as string[])].sort(), [members]);
+  // Colapsa "Atendimento, Atendimento" em "Atendimento" só no filtro por área
+  // (o valor bruto do member.area continua igual em todo o resto da tela).
+  const dedupeAreaParts = useCallback(
+    (a: string) => [...new Set(a.split(',').map((p) => p.trim()).filter(Boolean))].join(', '),
+    [],
+  );
+
+  const allAreas = useMemo(
+    () => [...new Set(members.map((m) => m.area).filter(Boolean).map((a) => dedupeAreaParts(a as string)))].sort(),
+    [members, dedupeAreaParts],
+  );
 
   const filtered = useMemo(() => {
-    let f = filterArea ? members.filter((m) => (m.area || '') === filterArea) : members;
+    let f = filterArea ? members.filter((m) => dedupeAreaParts(m.area || '') === filterArea) : members;
     if (search) {
       const q = search.toLowerCase();
       f = f.filter((m) =>
@@ -71,7 +81,10 @@ function AdminMembersPage() {
         String(m.id).includes(q),
       );
     }
-    return f;
+    // Sempre em ordem alfabética por nome, independente da ordem devolvida pela API
+    // (evita nomes com espaço/quebra de linha no início pularem pro topo, e usa
+    // colação pt-BR para acentos ordenarem como esperado).
+    return [...f].sort((a, b) => (a.name || '').trim().localeCompare((b.name || '').trim(), 'pt-BR', { sensitivity: 'base' }));
   }, [members, search, filterArea]);
 
   function reportToNames(m: Member) {

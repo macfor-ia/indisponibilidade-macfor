@@ -16,19 +16,21 @@ import { Card } from '../../../components/Card';
 import { Skeleton } from '../../../components/Skeleton';
 import { API } from '../../../lib/api-client';
 import { ROLE_LABELS, isAdminRole, isMasterAdminRole, isEditorRole } from '../../../lib/client-config';
-import { useAuth, useToast, useSetores } from '../../../providers';
+import { useAuth, useToast } from '../../../providers';
 
 function AdminUsersPage() {
   const router = useRouter();
   const toast = useToast();
   const { user } = useAuth();
-  const { setores } = useSetores();
+  const [squads, setSquads] = useState<string[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [pending, setPending] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignUserId, setAssignUserId] = useState<number | null>(null);
+
+  useEffect(() => { API.getSquads().then(setSquads).catch(() => {}); }, []);
 
   const isMaster = isMasterAdminRole(user!.role);
   const canEdit = isEditorRole(user!.role);
@@ -188,14 +190,14 @@ function AdminUsersPage() {
           </div>
         </Card>
 
-        <CreateUserDialog visible={createOpen} onHide={() => setCreateOpen(false)} onSaved={load} setores={setores} />
-        <AssignSetorDialog visible={assignOpen} onHide={() => setAssignOpen(false)} userId={assignUserId} users={users} setores={setores} onSaved={load} />
+        <CreateUserDialog visible={createOpen} onHide={() => setCreateOpen(false)} onSaved={load} squads={squads} />
+        <AssignSetorDialog visible={assignOpen} onHide={() => setAssignOpen(false)} userId={assignUserId} users={users} squads={squads} onSaved={load} />
       </div>
     </div>
   );
 }
 
-function CreateUserDialog({ visible, onHide, onSaved, setores }: { visible: boolean; onHide: () => void; onSaved: () => void; setores: string[] }) {
+function CreateUserDialog({ visible, onHide, onSaved, squads }: { visible: boolean; onHide: () => void; onSaved: () => void; squads: string[] }) {
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -246,8 +248,8 @@ function CreateUserDialog({ visible, onHide, onSaved, setores }: { visible: bool
           <Password value={password} onChange={(e) => setPassword(e.target.value)} feedback={false} toggleMask inputClassName="w-full" className="w-full" />
         </div>
         <div>
-          <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Departamento *</label>
-          <Dropdown value={dept} options={setores.map((s) => ({ label: s, value: s }))} onChange={(e) => setDept(e.value)} className="w-full" />
+          <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Setor *</label>
+          <Dropdown value={dept} options={squads.map((s) => ({ label: s, value: s }))} onChange={(e) => setDept(e.value)} className="w-full" />
         </div>
         <div>
           <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Role *</label>
@@ -268,7 +270,7 @@ function CreateUserDialog({ visible, onHide, onSaved, setores }: { visible: bool
   );
 }
 
-function AssignSetorDialog({ visible, onHide, userId, users, setores, onSaved }: { visible: boolean; onHide: () => void; userId: number | null; users: any[]; setores: string[]; onSaved: () => void }) {
+function AssignSetorDialog({ visible, onHide, userId, users, squads, onSaved }: { visible: boolean; onHide: () => void; userId: number | null; users: any[]; squads: string[]; onSaved: () => void }) {
   const toast = useToast();
   const target = users.find((u) => u.id === userId);
   const [setor, setSetor] = useState<string | null>(target?.department || null);
@@ -305,7 +307,7 @@ function AssignSetorDialog({ visible, onHide, userId, users, setores, onSaved }:
         )}
         <div>
           <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Setor</label>
-          <Dropdown value={setor} options={[{ label: 'Sem setor', value: null }, ...setores.map((s) => ({ label: s, value: s }))]} onChange={(e) => setSetor(e.value)} className="w-full" />
+          <Dropdown value={setor} options={[{ label: 'Sem setor', value: null }, ...squads.map((s) => ({ label: s, value: s }))]} onChange={(e) => setSetor(e.value)} className="w-full" />
         </div>
         <div className="flex items-center gap-2">
           <Checkbox inputId="isLider" checked={isLider} onChange={(e) => setIsLider(e.checked || false)} />

@@ -44,6 +44,8 @@ export const API = {
   createSetor: (name: string) => request('POST', '/api/admin/setores', { name }),
   updateSetor: (index: number, name: string) => request('PUT', `/api/admin/setores/${index}`, { name }),
   deleteSetor: (index: number) => request('DELETE', `/api/admin/setores/${index}`),
+  /** Rótulos "Área - Cliente" (ex: "Criação - Enterprise"), calculados a partir dos membros. Endpoint público, sem auth. */
+  getSquads: () => request<string[]>('GET', '/api/squads'),
 
   getUsers: () => request('GET', '/api/admin/users'),
   getPending: () => request('GET', '/api/admin/pending'),

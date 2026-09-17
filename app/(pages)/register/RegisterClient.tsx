@@ -11,7 +11,7 @@ const SELF_SERVICE_ROLES = ['colaborador', 'lider', 'socio'];
 
 export function RegisterClient() {
   const [form, setForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '', department: '', role: 'colaborador' });
-  const [setores, setSetores] = useState<string[]>([]);
+  const [squads, setSquads] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -29,12 +29,12 @@ export function RegisterClient() {
       })
       .catch((err) => console.error('[register] falha ao verificar banco:', err));
 
-    API.getSetores()
+    API.getSquads()
       .then((list) => {
-        console.log('[register] setores carregados:', list);
-        setSetores(list);
+        console.log('[register] squads carregados:', list);
+        setSquads(list);
       })
-      .catch((err) => console.error('[register] erro ao carregar setores:', err));
+      .catch((err) => console.error('[register] erro ao carregar squads:', err));
   }, []);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -118,10 +118,13 @@ export function RegisterClient() {
               <Dropdown
                 value={form.department}
                 onChange={(e) => setForm({ ...form, department: e.value })}
-                options={setores}
+                options={squads}
                 placeholder="Selecione seu setor"
                 className="w-full"
               />
+              <p className="text-[11px] text-[var(--text-muted)] mt-1">
+                O time da sua área que atende o mesmo cliente (ex: Criação - Enterprise).
+              </p>
             </div>
           )}
           {error && (
