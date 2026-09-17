@@ -46,6 +46,8 @@ export const API = {
   deleteSetor: (index: number) => request('DELETE', `/api/admin/setores/${index}`),
   /** Rótulos "Área - Cliente" (ex: "Criação - Enterprise"), calculados a partir dos membros. Endpoint público, sem auth. */
   getSquads: () => request<string[]>('GET', '/api/squads'),
+  /** Valores distintos de members.area (as áreas de verdade, atualizadas). Endpoint público, sem auth. */
+  getAreas: () => request<string[]>('GET', '/api/areas'),
 
   getUsers: () => request('GET', '/api/admin/users'),
   getPending: () => request('GET', '/api/admin/pending'),

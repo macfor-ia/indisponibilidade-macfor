@@ -8,7 +8,7 @@ import { Button } from 'primereact/button';
 import { User, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { API } from '../lib/api-client';
 import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, isFridayOrSaturday, AppUser } from '../lib/client-config';
-import { useSetores, useToast } from '../providers';
+import { useToast } from '../providers';
 import { Card } from './Card';
 
 interface Props {
@@ -17,8 +17,8 @@ interface Props {
 }
 
 export function UnavailForm({ user, onSubmitted }: Props) {
-  const { setores } = useSetores();
   const toast = useToast();
+  const [areas, setAreas] = useState<string[]>([]);
   const [type, setType] = useState<string | null>(null);
   const [department, setDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -39,15 +39,23 @@ export function UnavailForm({ user, onSubmitted }: Props) {
   }
 
   useEffect(() => {
+    API.getAreas().then(setAreas).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     API.getMyMemberInfo().then((info: any) => {
       setMemberInfo(info);
-      if (info?.member?.area && setores.includes(info.member.area)) {
-        setDepartment(info.member.area);
-      } else if (user.department && setores.includes(user.department)) {
+      // member.area pode ter mais de um valor separado por vírgula (quem atende mais de
+      // um cliente) — usa o primeiro que bater com a lista real de áreas do banco.
+      const memberAreas = String(info?.member?.area || '').split(',').map((a: string) => a.trim()).filter(Boolean);
+      const matched = memberAreas.find((a: string) => areas.includes(a));
+      if (matched) {
+        setDepartment(matched);
+      } else if (user.department && areas.includes(user.department)) {
         setDepartment(user.department);
       }
     }).catch(() => {});
-  }, [user, setores]);
+  }, [user, areas]);
 
   useEffect(() => {
     if (type === 'pontual' && startDate) {
@@ -140,7 +148,7 @@ export function UnavailForm({ user, onSubmitted }: Props) {
   }
 
   const typeOptions = UNAVAIL_TYPES.map((t) => ({ label: t.label, value: t.value }));
-  const setorOptions = setores.map((s) => ({ label: s, value: s }));
+  const areaOptions = areas.map((a) => ({ label: a, value: a }));
 
   const quotaColor =
     memberInfo?.remaining_days <= 0 ? 'text-red-400' :
@@ -186,7 +194,7 @@ export function UnavailForm({ user, onSubmitted }: Props) {
 
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Departamento ou área de atuação</label>
-          <Dropdown value={department} options={setorOptions} onChange={(e) => setDepartment(e.value)} placeholder="Selecione..." className="w-full" />
+          <Dropdown value={department} options={areaOptions} onChange={(e) => setDepartment(e.value)} placeholder="Selecione..." className="w-full" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

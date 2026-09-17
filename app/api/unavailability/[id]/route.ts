@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queries } from '../../../lib/database';
 import { requireAuth, isAdminEditor, countCalendarDays, isFridayOrSaturday, cleanText } from '../../../lib/auth';
-import { loadSetores } from '../../../lib/setores';
+import { listDistinctAreas } from '../../../lib/squads';
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAuth();
@@ -34,8 +34,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const existing = await queries.getUserActiveUnavailability(record.user_id);
   const overlap = existing.find((r: any) => r.id !== record.id && start_date <= r.end_date && r.start_date <= end_date);
   if (overlap) return NextResponse.json({ error: `Período se sobrepõe a outra solicitação (${overlap.start_date} a ${overlap.end_date}).` }, { status: 400 });
-  if (department && !loadSetores().includes(department)) {
-    return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+  if (department && !(listDistinctAreas(await queries.getAllMembers())).includes(department)) {
+    return NextResponse.json({ error: 'Área inválida.' }, { status: 400 });
   }
   const balance = await queries.getMemberBalanceForUser(record.user_id);
   if (balance !== null && total_days > balance) {

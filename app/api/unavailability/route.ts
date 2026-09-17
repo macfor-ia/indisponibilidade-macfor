@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queries } from '../../lib/database';
 import { requireAuth, canViewAll, countCalendarDays, isFridayOrSaturday, isLider } from '../../lib/auth';
-import { loadSetores } from '../../lib/setores';
 import { filterUnavailabilityForLider, filterUnavailabilityBySquad, filterUnavailabilityByAreas } from '../../lib/unavailability-helpers';
-import { operacaoRoleSquad, areaRoleAreas } from '../../lib/squads';
+import { operacaoRoleSquad, areaRoleAreas, listDistinctAreas } from '../../lib/squads';
 
 export async function POST(req: NextRequest) {
   const { user, response } = await requireAuth();
@@ -17,9 +16,9 @@ export async function POST(req: NextRequest) {
   if (!validTypes.includes(unavailability_type)) {
     return NextResponse.json({ error: 'Tipo de indisponibilidade inválido.' }, { status: 400 });
   }
-  const validDepts = loadSetores();
+  const validDepts = listDistinctAreas(await queries.getAllMembers());
   if (!validDepts.includes(department)) {
-    return NextResponse.json({ error: 'Setor inválido.' }, { status: 400 });
+    return NextResponse.json({ error: 'Área inválida.' }, { status: 400 });
   }
   const [sy, sm, sd] = start_date.split('-').map(Number);
   const [ey, em, ed] = end_date.split('-').map(Number);

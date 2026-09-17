@@ -54,6 +54,15 @@ export function listDistinctSquads(members: { area?: string | null; squad?: stri
   return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
 }
 
+/** Lista, em ordem alfabética, os valores distintos de `members.area` (sem juntar com squad). */
+export function listDistinctAreas(members: { area?: string | null }[]): string[] {
+  const set = new Set<string>();
+  for (const m of members) {
+    (m.area || '').split(',').map((a) => a.trim()).filter(Boolean).forEach((a) => set.add(a));
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+}
+
 /**
  * Roles especiais de "operação" — um por cliente. Só enxergam (não aprovam) todo mundo
  * daquele cliente, independente da área. Usado tanto no front (gate de aba) quanto no
