@@ -16,6 +16,14 @@ export const DEPT_COLORS: Record<string, string> = {
   'Criacao': '#F472B6',
   'Performance: CRM/Midia/SEO': '#FB923C',
   'Projetos/Operacoes': '#5B8DEF',
+  // Áreas reais da tabela members (podem diferir dos setores acima)
+  'Account Partner': '#34D399',
+  'Analytics': '#818CF8',
+  'Content': '#A78BFA',
+  'Creative': '#F472B6',
+  'Media Guild': '#22D3EE',
+  'SEO': '#84CC16',
+  'CRM': '#F87171',
 };
 
 export const UNAVAIL_TYPES = [

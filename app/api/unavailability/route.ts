@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queries } from '../../lib/database';
-import { requireAuth, canViewAll, countCalendarDays, isFridayOrSaturday } from '../../lib/auth';
+import { requireAuth, canViewAll, countCalendarDays, isFridayOrSaturday, isLider } from '../../lib/auth';
 import { loadSetores } from '../../lib/setores';
+import { filterUnavailabilityForLider } from '../../lib/unavailability-helpers';
 
 export async function POST(req: NextRequest) {
   const { user, response } = await requireAuth();
@@ -76,11 +77,17 @@ export async function GET() {
   const { user, response } = await requireAuth();
   if (response) return response;
 
+  const LIMIT = 500;
   if (canViewAll(user!.role)) {
-    const LIMIT = 500;
     const data = await queries.getAllUnavailability({ limit: LIMIT });
     return NextResponse.json({ data, truncated: data.length >= LIMIT });
-  } else {
-    return NextResponse.json({ data: await queries.getUserUnavailability(user!.id), truncated: false });
   }
+  if (isLider(user!.role)) {
+    // Painel Geral do líder: só quem reporta pra ele ou é da mesma área+squad
+    // (mesmo critério já usado na aba "Indisponíveis Agora").
+    const all = await queries.getAllUnavailability({ limit: LIMIT });
+    const data = await filterUnavailabilityForLider(all, user!);
+    return NextResponse.json({ data, truncated: all.length >= LIMIT });
+  }
+  return NextResponse.json({ data: await queries.getUserUnavailability(user!.id), truncated: false });
 }

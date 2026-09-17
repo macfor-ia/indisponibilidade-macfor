@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { queries } from '../../../lib/database';
 import { cleanText } from '../../../lib/auth';
-import { listDistinctSquads, parseSquadKey } from '../../../lib/squads';
 
 // Roles que um usuário pode se autoatribuir ao solicitar acesso. Qualquer
 // outra coisa (admin_master, admin_editor, admin_leitor) é ignorada e cai
@@ -12,27 +11,19 @@ const SELF_SERVICE_ROLES = ['colaborador', 'lider', 'socio'];
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { email, password, full_name, department, role: requestedRole } = body;
+  const { email, password, full_name, role: requestedRole } = body;
   const role = SELF_SERVICE_ROLES.includes(requestedRole) ? requestedRole : 'colaborador';
-  // Sócio não pertence a um setor específico — só colaborador/líder precisam escolher um.
-  const isSocio = role === 'socio';
+  // Setor não é mais escolhido no cadastro — um admin atribui depois (tela Usuários).
 
-  console.log('[register] dados recebidos:', { email, full_name, department, role, password: password ? '***' : undefined });
+  console.log('[register] dados recebidos:', { email, full_name, role, password: password ? '***' : undefined });
 
-  if (!email || !password || !full_name || (!isSocio && !department)) {
-    console.warn('[register] campos faltando:', { email: !!email, password: !!password, full_name: !!full_name, department: !!department });
+  if (!email || !password || !full_name) {
+    console.warn('[register] campos faltando:', { email: !!email, password: !!password, full_name: !!full_name });
     return NextResponse.json({ error: 'Todos os campos são obrigatórios.' }, { status: 400 });
   }
   const emailLower = email.toLowerCase().trim();
   if (!emailLower.endsWith('@macfor.com.br')) {
     return NextResponse.json({ error: 'Apenas emails @macfor.com.br podem se registrar.' }, { status: 400 });
-  }
-  if (!isSocio) {
-    const validSquads = listDistinctSquads(await queries.getAllMembers());
-    console.log('[register] squads válidos:', validSquads);
-    if (!validSquads.includes(department)) {
-      return NextResponse.json({ error: 'Squad inválido.' }, { status: 400 });
-    }
   }
   if (password.length < 6) {
     return NextResponse.json({ error: 'Senha deve ter pelo menos 6 caracteres.' }, { status: 400 });
@@ -52,12 +43,11 @@ export async function POST(req: NextRequest) {
     let member = await queries.getMemberByEmail(emailLower);
     if (!member) {
       console.log('[register] membro não encontrado, criando novo...');
-      const { area, squad } = isSocio ? { area: null, squad: null } : parseSquadKey(department);
       member = await queries.createMember({
         name: cleanText(full_name),
         email: emailLower,
-        area,
-        squad,
+        area: null,
+        squad: null,
         funcao: null,
         report_to_name: null,
         report_to_email: null,
@@ -74,7 +64,7 @@ export async function POST(req: NextRequest) {
       email: emailLower,
       password: hash,
       full_name: cleanText(full_name),
-      department: isSocio ? null : department,
+      department: null,
       member_id: (member as any).id,
       role,
     });

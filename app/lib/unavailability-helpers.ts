@@ -1,5 +1,5 @@
 import { queries } from './database';
-import { isAdminEditor, isLider, isMasterAdmin, AuthUser } from './auth';
+import { isAdminEditor, isMasterAdmin, AuthUser } from './auth';
 
 export function parseReportTo(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -144,16 +144,17 @@ export async function filterUnavailabilityByReportTo<T extends { user_id: number
 }
 
 /**
- * Decide quem pode aprovar/rejeitar uma solicitação. Para líder e sócio, a
- * regra é a mesma: o nome (ou email) dele precisa estar no report_to_name
- * (ou report_to_email) do member do solicitante — não basta estar no mesmo setor/squad (isso só
- * vale pra visualização do líder, ver filterUnavailabilityForLider).
+ * Decide quem pode aprovar/rejeitar uma solicitação. A regra do report_to vale
+ * pra qualquer role (mesmo "colaborador"/prestador) — o que importa é o nome
+ * (ou email) da pessoa estar no report_to_name (ou report_to_email) do member
+ * do solicitante, não a role da conta. Não basta estar no mesmo setor/squad
+ * (isso só vale pra visualização do líder, ver filterUnavailabilityForLider).
  */
 export async function canApproveUnavailability(approverUser: AuthUser, record: any): Promise<boolean> {
   if (isMasterAdmin(approverUser.role)) return true;
   if (approverUser.id === record.user_id) return false;
   if (isAdminEditor(approverUser.role)) return true;
-  if ((isLider(approverUser.role) || approverUser.role === 'socio') && approverUser.email) {
+  if (approverUser.email) {
     const requester = await queries.getUserById(record.user_id);
     if (!requester) return false;
     let requesterMember: any = null;

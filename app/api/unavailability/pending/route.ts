@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { queries } from '../../../lib/database';
-import { requireAuth, isAdmin, isLider } from '../../../lib/auth';
+import { requireAuth, isAdmin } from '../../../lib/auth';
 import { filterUnavailabilityByReportTo } from '../../../lib/unavailability-helpers';
 
 export async function GET() {
   const { user, response } = await requireAuth();
   if (response) return response;
 
-  if (!isAdmin(user!.role) && !isLider(user!.role) && user!.role !== 'socio') {
-    return NextResponse.json({ error: 'Acesso restrito a líderes e administradores.' }, { status: 403 });
-  }
+  // Sem gate por role aqui: qualquer pessoa pode chamar, mas só vê (mais
+  // abaixo) as solicitações de quem de fato reporta pra ela — pra quem não
+  // é aprovador de ninguém, o filtro abaixo já devolve lista vazia.
   const allPending = await queries.getPendingUnavailability();
 
   async function attachConflicts(list: any[]) {

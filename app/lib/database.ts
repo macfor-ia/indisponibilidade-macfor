@@ -69,13 +69,13 @@ export const queries = {
   },
   getMembersByIds: async (ids: number[]) => {
     if (!ids || !ids.length) return [];
-    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to_name, report_to_email').in('id', ids);
+    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, area, squad, report_to_name, report_to_email').in('id', ids);
     if (res.error) return [];
     return res.data || [];
   },
   getMembersByEmails: async (emails: string[]) => {
     if (!emails || !emails.length) return [];
-    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, squad, report_to_name, report_to_email').in('email', emails);
+    const res = await supabase.from(MEMBERS_TABLE).select('id, email, name, area, squad, report_to_name, report_to_email').in('email', emails);
     if (res.error) return [];
     return res.data || [];
   },
@@ -194,6 +194,23 @@ export const queries = {
     );
     return approvers.length === 1 ? approvers[0] : approvers.length > 1 ? approvers : null;
   },
+  /** true se alguém na tabela members tem esse email/nome no seu report_to — ou seja, se essa
+   *  pessoa é aprovadora de alguém, independente da role da conta (mesmo um "colaborador" pode ser). */
+  hasDirectReports: async (email: string, name?: string | null) => {
+    const res = await supabase.from(MEMBERS_TABLE).select('report_to_email, report_to_name');
+    if (res.error || !res.data) return false;
+    const emailLower = email.toLowerCase();
+    const nameLower = name ? name.toLowerCase() : null;
+    return res.data.some((m: any) => {
+      const emails = (m.report_to_email || '').split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+      if (emails.includes(emailLower)) return true;
+      if (nameLower) {
+        const names = (m.report_to_name || '').split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+        if (names.includes(nameLower)) return true;
+      }
+      return false;
+    });
+  },
   getApproverEmailsForMember: async (email: string) => {
     const memberRes = await supabase.from(MEMBERS_TABLE).select('report_to_email').eq('email', email).single();
     if (memberRes.error || !memberRes.data) return [];
@@ -229,11 +246,32 @@ export const queries = {
   },
   getAllUnavailability: async ({ limit = 500 }: { limit?: number } = {}) => {
     const res = await supabase.from('unavailability')
-      .select(`*, ${USERS_TABLE}!user_id (nome, email)`)
+      .select(`*, ${USERS_TABLE}!user_id (nome, email, member_id)`)
       .order('created_at', { ascending: false })
       .limit(limit);
     if (res.error) { console.error('getAllUnavailability error:', res.error); return []; }
-    return (res.data || []).map((d: any) => ({ ...d, user_name: d[USERS_TABLE]?.nome, user_email: d[USERS_TABLE]?.email }));
+    const rows = res.data || [];
+
+    // Anexa a área real do membro (tabela members) de cada solicitante — usada
+    // pra agrupar "Indisponibilidade por Departamento" na área de verdade, não
+    // no setor livre escolhido no formulário (item.department).
+    const memberIds = [...new Set(rows.map((d: any) => d[USERS_TABLE]?.member_id).filter(Boolean))];
+    const emailsWithoutMemberId = [...new Set(rows.filter((d: any) => !d[USERS_TABLE]?.member_id && d[USERS_TABLE]?.email).map((d: any) => d[USERS_TABLE].email.toLowerCase()))];
+    const [membersByIds, membersByEmails] = await Promise.all([
+      memberIds.length ? queries.getMembersByIds(memberIds as number[]) : Promise.resolve([]),
+      emailsWithoutMemberId.length ? queries.getMembersByEmails(emailsWithoutMemberId as string[]) : Promise.resolve([]),
+    ]);
+    const areaByMemberId: Record<number, string> = Object.fromEntries(membersByIds.map((m: any) => [m.id, m.area]));
+    const areaByEmail: Record<string, string> = Object.fromEntries(
+      [...membersByIds, ...membersByEmails].filter((m: any) => m.email).map((m: any) => [m.email.toLowerCase(), m.area])
+    );
+
+    return rows.map((d: any) => {
+      const memberId = d[USERS_TABLE]?.member_id;
+      const email = d[USERS_TABLE]?.email?.toLowerCase();
+      const member_area = (memberId ? areaByMemberId[memberId] : null) ?? (email ? areaByEmail[email] : null) ?? null;
+      return { ...d, user_name: d[USERS_TABLE]?.nome, user_email: d[USERS_TABLE]?.email, member_area };
+    });
   },
   getUserUnavailability: async (user_id: number) => {
     const res = await supabase.from('unavailability')

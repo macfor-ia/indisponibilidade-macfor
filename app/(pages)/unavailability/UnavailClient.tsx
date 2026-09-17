@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Calendar, Clock, CircleCheck, Plus, FileText, History } from 'lucide-react';
@@ -22,8 +22,16 @@ function UnavailPage() {
   const isAdmin = canViewAllRole(user!.role);
   const isLider = isLiderRole(user!.role);
   const isSocio = user!.role === 'socio';
-  // Sócio também aprova via report_to (igual líder), então também ganha a aba.
-  const canSeePending = isLider || isSocio;
+  const [isApprover, setIsApprover] = useState(false);
+
+  useEffect(() => {
+    API.getMyMemberInfo().then((info: any) => setIsApprover(!!info?.is_approver)).catch(() => {});
+  }, []);
+
+  // Sócio também aprova via report_to (igual líder). E qualquer pessoa —
+  // mesmo role "colaborador"/prestador — que tenha alguém reportando pra ela
+  // (is_approver) também ganha a fila de aprovação.
+  const canSeePending = isLider || isSocio || isApprover;
   const canSeeActive = isAdmin || isLider;
 
   const [activeTab, setActiveTab] = useState(0);
@@ -39,7 +47,7 @@ function UnavailPage() {
   const { kpis, active } = useKpis(isAdmin, reloadKey);
 
   const tabs: { key: string; show: boolean; label: string; icon: any }[] = [
-    { key: 'overview', show: isAdmin, label: 'Painel Geral', icon: Calendar },
+    { key: 'overview', show: isAdmin || isLider, label: 'Painel Geral', icon: Calendar },
     { key: 'pending', show: canSeePending, label: 'Pedidos Aguardando', icon: Clock },
     { key: 'active', show: canSeeActive, label: 'Indisponíveis Agora', icon: CircleCheck },
     { key: 'form', show: true, label: 'Solicitar', icon: Plus },

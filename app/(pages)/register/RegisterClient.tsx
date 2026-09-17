@@ -10,12 +10,10 @@ import { ROLE_LABELS } from '../../lib/client-config';
 const SELF_SERVICE_ROLES = ['colaborador', 'lider', 'socio'];
 
 export function RegisterClient() {
-  const [form, setForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '', department: '', role: 'colaborador' });
-  const [squads, setSquads] = useState<string[]>([]);
+  const [form, setForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '', role: 'colaborador' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const isSocio = form.role === 'socio';
 
   useEffect(() => {
     fetch('/api/health')
@@ -28,13 +26,6 @@ export function RegisterClient() {
         }
       })
       .catch((err) => console.error('[register] falha ao verificar banco:', err));
-
-    API.getSquads()
-      .then((list) => {
-        console.log('[register] squads carregados:', list);
-        setSquads(list);
-      })
-      .catch((err) => console.error('[register] erro ao carregar squads:', err));
   }, []);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -44,13 +35,10 @@ export function RegisterClient() {
       setError('As senhas não coincidem.');
       return;
     }
-    if (!isSocio && !form.department) {
-      setError('Selecione um setor.');
-      return;
-    }
     setSubmitting(true);
     try {
-      await API.register({ full_name: form.full_name, email: form.email, password: form.password, department: isSocio ? null : form.department, role: form.role });
+      // Setor é atribuído depois por um admin (tela Usuários), não na hora do cadastro.
+      await API.register({ full_name: form.full_name, email: form.email, password: form.password, department: null, role: form.role });
       setSuccess(true);
     } catch (err: any) {
       console.error('[register] erro:', err);
@@ -112,21 +100,6 @@ export function RegisterClient() {
               Sujeito à aprovação de um administrador antes de valer.
             </p>
           </div>
-          {!isSocio && (
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Setor</label>
-              <Dropdown
-                value={form.department}
-                onChange={(e) => setForm({ ...form, department: e.value })}
-                options={squads}
-                placeholder="Selecione seu setor"
-                className="w-full"
-              />
-              <p className="text-[11px] text-[var(--text-muted)] mt-1">
-                O time da sua área que atende o mesmo cliente (ex: Criação - Enterprise).
-              </p>
-            </div>
-          )}
           {error && (
             <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm">{error}</div>
           )}

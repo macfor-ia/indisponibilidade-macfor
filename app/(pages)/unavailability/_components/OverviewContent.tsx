@@ -5,7 +5,7 @@ import { Clock } from 'lucide-react';
 import { Card } from '../../../components/Card';
 import { UnavailCalendar } from '../../../components/UnavailCalendar';
 import { DEPT_COLORS, STATUS_MAP, isEditorRole, formatDate, formatDateShort } from '../../../lib/client-config';
-import { useAuth, useSetores } from '../../../providers';
+import { useAuth } from '../../../providers';
 
 interface Props {
   all: any[];
@@ -16,21 +16,23 @@ interface Props {
 
 export function OverviewContent({ all, eventos = [], onApprove, onReject }: Props) {
   const { user } = useAuth();
-  const { setores } = useSetores();
 
   const approvedAll = all.filter((i) => i.status === 'approved' || i.status === 'pending');
 
+  // Agrupado pela área real do membro (tabela members), não pelo setor livre
+  // escolhido no formulário — só aparecem as áreas que existem de fato no banco.
   const deptStats: Record<string, { total: number; active: number; days: number }> = {};
-  setores.forEach((d) => { deptStats[d] = { total: 0, active: 0, days: 0 }; });
   const today = new Date().toISOString().split('T')[0];
   all.filter((i) => i.status === 'approved').forEach((i) => {
-    if (deptStats[i.department]) {
-      deptStats[i.department].total++;
-      deptStats[i.department].days += i.total_days || 0;
-      if (i.start_date <= today && i.end_date >= today) deptStats[i.department].active++;
-    }
+    const areas = [...new Set(String(i.member_area || '').split(',').map((a: string) => a.trim()).filter(Boolean))];
+    areas.forEach((area) => {
+      if (!deptStats[area]) deptStats[area] = { total: 0, active: 0, days: 0 };
+      deptStats[area].total++;
+      deptStats[area].days += i.total_days || 0;
+      if (i.start_date <= today && i.end_date >= today) deptStats[area].active++;
+    });
   });
-  const activeDepts = Object.entries(deptStats).filter(([, v]) => v.total > 0).sort((a, b) => b[1].active - a[1].active);
+  const activeDepts = Object.entries(deptStats).sort((a, b) => b[1].active - a[1].active);
 
   const pending = all.filter((i) => i.status === 'pending').slice(0, 5);
   const upcoming = all
@@ -68,7 +70,7 @@ export function OverviewContent({ all, eventos = [], onApprove, onReject }: Prop
 
       {activeDepts.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-base font-semibold mb-4">Indisponibilidade por Departamento</h3>
+          <h3 className="text-base font-semibold mb-4">Indisponibilidade por Área</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {activeDepts.map(([dept, stats]) => {
               const color = DEPT_COLORS[dept] || 'var(--accent)';

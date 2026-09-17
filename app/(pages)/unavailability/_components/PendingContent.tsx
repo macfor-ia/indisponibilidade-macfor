@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { Clock } from 'lucide-react';
 import { Card } from '../../../components/Card';
@@ -22,6 +22,11 @@ export function PendingContent({ items, onApprove, onReject, onEdit, onDelete, o
   const { user } = useAuth();
   const toast = useToast();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isApprover, setIsApprover] = useState(false);
+
+  useEffect(() => {
+    API.getMyMemberInfo().then((info: any) => setIsApprover(!!info?.is_approver)).catch(() => {});
+  }, []);
 
   function toggleSelect(id: number) {
     setSelectedIds((prev) => {
@@ -53,7 +58,8 @@ export function PendingContent({ items, onApprove, onReject, onEdit, onDelete, o
     );
   }
 
-  const canApprove = isEditorRole(user!.role) || isLiderRole(user!.role) || user!.role === 'socio';
+  // Mesmo role "colaborador"/prestador pode aprovar se tiver alguém reportando pra ela (isApprover).
+  const canApprove = isEditorRole(user!.role) || isLiderRole(user!.role) || user!.role === 'socio' || isApprover;
 
   return (
     <>

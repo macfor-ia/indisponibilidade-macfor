@@ -16,11 +16,15 @@ export async function GET() {
     approver = { name: (approverResult as any).name, email: (approverResult as any).email };
   }
   const m: any = member;
+  // Alguém reporta pra essa pessoa? Se sim, ela pode aprovar/reavaliar as
+  // solicitações de quem reporta pra ela — mesmo com role "colaborador".
+  const is_approver = await queries.hasDirectReports(user!.email, m.name);
   // day_offs_quota é o saldo atual — descontado na confirmação, devolvido se
   // uma solicitação aprovada for removida (ver app/lib/database.ts).
   return NextResponse.json({
     member,
     approver,
     remaining_days: m.day_offs_quota || 0,
+    is_approver,
   });
 }
