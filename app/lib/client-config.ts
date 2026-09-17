@@ -16,14 +16,17 @@ export const DEPT_COLORS: Record<string, string> = {
   'Criacao': '#F472B6',
   'Performance: CRM/Midia/SEO': '#FB923C',
   'Projetos/Operacoes': '#5B8DEF',
-  // Áreas reais da tabela members (podem diferir dos setores acima)
-  'Account Partner': '#34D399',
-  'Analytics': '#818CF8',
-  'Content': '#A78BFA',
-  'Creative': '#F472B6',
-  'Media Guild': '#22D3EE',
+  // Valores reais da coluna members.area hoje no banco (confira direto na tabela antes de
+  // mudar — os nomes aqui têm que bater exatamente, incluindo acento).
+  'Designers': '#F472B6',
+  'Mídia': '#22D3EE',
+  'Tech': '#818CF8',
+  'Time técnico': '#A78BFA',
+  'B.I': '#60A5FA',
+  'Revisão': '#A78BFA',
   'SEO': '#84CC16',
   'CRM': '#F87171',
+  'Projetos e Operações': '#5B8DEF',
 };
 
 export const UNAVAIL_TYPES = [
@@ -44,6 +47,10 @@ export const ROLE_LABELS: Record<string, string> = {
   lider: 'Líder de Setor',
   socio: 'Sócio',
   colaborador: 'Prestador',
+  operacao_sme: 'Operação SME',
+  operacao_syngenta: 'Operação Syngenta',
+  operacao_enterprise: 'Operação Enterprise',
+  midias_seo: 'Mídia e SEO',
 };
 
 export interface AppUser {

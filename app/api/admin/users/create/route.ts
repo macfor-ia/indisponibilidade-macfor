@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (!validSquads.includes(department)) {
     return NextResponse.json({ error: 'Squad inválido.' }, { status: 400 });
   }
-  const validRoles = ['admin_editor', 'admin_leitor', 'socio', 'colaborador', 'lider'];
+  const validRoles = ['admin_editor', 'admin_leitor', 'socio', 'colaborador', 'lider', 'operacao_sme', 'operacao_syngenta', 'operacao_enterprise', 'midias_seo'];
   if (!validRoles.includes(role)) {
     return NextResponse.json({ error: 'Role inválido.' }, { status: 400 });
   }

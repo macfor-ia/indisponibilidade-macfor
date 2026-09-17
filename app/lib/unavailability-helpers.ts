@@ -118,6 +118,52 @@ export async function filterUnavailabilityForLider<T extends { user_id: number }
 }
 
 /**
+ * Filtra uma lista de solicitações de indisponibilidade pra quem só enxerga um cliente
+ * inteiro (roles "operacao_sme"/"operacao_syngenta"/"operacao_enterprise"): todo mundo cuja
+ * coluna squad (tabela members) inclui esse cliente, de qualquer área — sem olhar
+ * department/report_to. Isso é só visualização; nunca dá poder de aprovar.
+ */
+export async function filterUnavailabilityBySquad<T extends { user_id: number }>(
+  list: T[],
+  squadName: string,
+): Promise<T[]> {
+  if (!list.length) return list;
+
+  const { userById, getMember } = await batchLoadUsersAndMembers(list);
+
+  return list.filter((r) => {
+    const u = userById[r.user_id];
+    if (!u) return false;
+    const member = getMember(u);
+    return squadsOverlap(squadName, member?.squad);
+  });
+}
+
+/**
+ * Filtra uma lista de solicitações de indisponibilidade pra quem só enxerga um conjunto de
+ * ÁREAS (ex.: role "midias_seo" → ["Media Guild", "SEO"]): todo mundo cuja coluna area
+ * (tabela members) inclui alguma dessas áreas, de qualquer cliente. Isso é só visualização;
+ * nunca dá poder de aprovar.
+ */
+export async function filterUnavailabilityByAreas<T extends { user_id: number }>(
+  list: T[],
+  areas: string[],
+): Promise<T[]> {
+  if (!list.length) return list;
+
+  const wanted = new Set(areas.map((a) => a.toLowerCase()));
+  const { userById, getMember } = await batchLoadUsersAndMembers(list);
+
+  return list.filter((r) => {
+    const u = userById[r.user_id];
+    if (!u) return false;
+    const member = getMember(u);
+    const memberAreas = String(member?.area || '').split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean);
+    return memberAreas.some((a: string) => wanted.has(a));
+  });
+}
+
+/**
  * Filtra uma lista de solicitações para o que approverUser (líder ou sócio)
  * pode efetivamente APROVAR: nome/email dele presente no report_to_name/
  * report_to_email do member do solicitante. Mesmo critério usado em canApproveUnavailability — usada

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!target) return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 });
   if (isMasterAdmin(target.role)) return NextResponse.json({ error: 'Não é possível alterar o Admin Master.' }, { status: 403 });
   try {
-    const ROLES_ABOVE_LIDER = ['admin_master', 'admin_editor', 'admin_leitor', 'socio'];
+    const ROLES_ABOVE_LIDER = ['admin_master', 'admin_editor', 'admin_leitor', 'socio', 'operacao_sme', 'operacao_syngenta', 'operacao_enterprise', 'midias_seo'];
     const newRole = is_lider
       ? (ROLES_ABOVE_LIDER.includes(target.role) ? target.role : 'lider')
       : (target.role === 'lider' ? 'colaborador' : target.role);

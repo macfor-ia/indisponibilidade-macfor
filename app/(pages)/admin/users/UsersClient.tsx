@@ -162,7 +162,7 @@ function AdminUsersPage() {
                         ) : (
                           <Dropdown
                             value={u.role}
-                            options={['admin_editor', 'admin_leitor', 'lider', 'socio', 'colaborador'].map((r) => ({ label: ROLE_LABELS[r] || r, value: r }))}
+                            options={['admin_editor', 'admin_leitor', 'lider', 'socio', 'colaborador', 'operacao_sme', 'operacao_syngenta', 'operacao_enterprise', 'midias_seo'].map((r) => ({ label: ROLE_LABELS[r] || r, value: r }))}
                             onChange={(e) => changeRole(u.id, e.value)}
                             disabled={u.id === user!.id}
                             className="text-xs"
@@ -255,7 +255,7 @@ function CreateUserDialog({ visible, onHide, onSaved, squads }: { visible: boole
           <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Role *</label>
           <Dropdown
             value={role}
-            options={['colaborador', 'socio', 'admin_leitor', 'admin_editor'].map((r) => ({ label: ROLE_LABELS[r] || r, value: r }))}
+            options={['colaborador', 'socio', 'admin_leitor', 'admin_editor', 'operacao_sme', 'operacao_syngenta', 'operacao_enterprise', 'midias_seo'].map((r) => ({ label: ROLE_LABELS[r] || r, value: r }))}
             onChange={(e) => setRole(e.value)}
             className="w-full"
           />

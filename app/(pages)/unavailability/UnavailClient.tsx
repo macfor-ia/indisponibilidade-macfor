@@ -9,6 +9,7 @@ import { withAuth } from '../../components/withAuth';
 import { EditUnavailDialog } from '../../components/EditUnavailDialog';
 import { API } from '../../lib/api-client';
 import { canViewAllRole, isLiderRole } from '../../lib/client-config';
+import { isOperacaoRole, isAreaRole } from '../../lib/squads';
 import { useAuth, useToast } from '../../providers';
 import { KpiStrip } from './_components/KpiStrip';
 import { ActiveTimeline } from './_components/ActiveTimeline';
@@ -22,6 +23,9 @@ function UnavailPage() {
   const isAdmin = canViewAllRole(user!.role);
   const isLider = isLiderRole(user!.role);
   const isSocio = user!.role === 'socio';
+  // Roles de visualização restrita (por cliente ou por área) — só ganham o Painel Geral,
+  // filtrado; nunca a fila de aprovação.
+  const isScopedViewer = isOperacaoRole(user!.role) || isAreaRole(user!.role);
   const [isApprover, setIsApprover] = useState(false);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ function UnavailPage() {
   const { kpis, active } = useKpis(isAdmin, reloadKey);
 
   const tabs: { key: string; show: boolean; label: string; icon: any }[] = [
-    { key: 'overview', show: isAdmin || isLider, label: 'Painel Geral', icon: Calendar },
+    { key: 'overview', show: isAdmin || isLider || isScopedViewer, label: 'Painel Geral', icon: Calendar },
     { key: 'pending', show: canSeePending, label: 'Pedidos Aguardando', icon: Clock },
     { key: 'active', show: canSeeActive, label: 'Indisponíveis Agora', icon: CircleCheck },
     { key: 'form', show: true, label: 'Solicitar', icon: Plus },

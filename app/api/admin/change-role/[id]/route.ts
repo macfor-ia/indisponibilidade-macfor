@@ -11,7 +11,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const { id } = await ctx.params;
   const { role } = await req.json();
   const userId = parseInt(id);
-  const validRoles = ['admin_editor', 'admin_leitor', 'socio', 'colaborador', 'lider'];
+  const validRoles = ['admin_editor', 'admin_leitor', 'socio', 'colaborador', 'lider', 'operacao_sme', 'operacao_syngenta', 'operacao_enterprise', 'midias_seo'];
   if (!validRoles.includes(role)) return NextResponse.json({ error: 'Role inválido.' }, { status: 400 });
   if (userId === user!.id) return NextResponse.json({ error: 'Você não pode alterar seu próprio role.' }, { status: 400 });
   const target = await queries.getUserById(userId);

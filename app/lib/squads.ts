@@ -53,3 +53,42 @@ export function listDistinctSquads(members: { area?: string | null; squad?: stri
   }
   return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
 }
+
+/**
+ * Roles especiais de "operação" — um por cliente. Só enxergam (não aprovam) todo mundo
+ * daquele cliente, independente da área. Usado tanto no front (gate de aba) quanto no
+ * backend (filtro dos dados).
+ */
+export const OPERACAO_ROLE_SQUAD: Record<string, string> = {
+  operacao_sme: 'SME',
+  operacao_syngenta: 'Syngenta',
+  operacao_enterprise: 'Enterprise',
+};
+
+export function isOperacaoRole(role: string): boolean {
+  return role in OPERACAO_ROLE_SQUAD;
+}
+
+/** Cliente (squad) que essa role de operação enxerga, ou null se não for uma role de operação. */
+export function operacaoRoleSquad(role: string): string | null {
+  return OPERACAO_ROLE_SQUAD[role] || null;
+}
+
+/**
+ * Roles especiais por ÁREA (em vez de cliente) — enxergam (não aprovam) todo mundo daquelas
+ * áreas, de qualquer cliente. Os valores aqui têm que bater exatamente com o que está hoje na
+ * coluna `members.area` no banco real (confira direto na tabela antes de mudar — não usar uma
+ * cópia local, que pode estar desatualizada).
+ */
+export const AREA_ROLE_AREAS: Record<string, string[]> = {
+  midias_seo: ['Mídia', 'SEO'],
+};
+
+export function isAreaRole(role: string): boolean {
+  return role in AREA_ROLE_AREAS;
+}
+
+/** Áreas que essa role enxerga, ou null se não for uma role de área. */
+export function areaRoleAreas(role: string): string[] | null {
+  return AREA_ROLE_AREAS[role] || null;
+}

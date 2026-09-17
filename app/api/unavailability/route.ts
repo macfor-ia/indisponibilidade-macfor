@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queries } from '../../lib/database';
 import { requireAuth, canViewAll, countCalendarDays, isFridayOrSaturday, isLider } from '../../lib/auth';
 import { loadSetores } from '../../lib/setores';
-import { filterUnavailabilityForLider } from '../../lib/unavailability-helpers';
+import { filterUnavailabilityForLider, filterUnavailabilityBySquad, filterUnavailabilityByAreas } from '../../lib/unavailability-helpers';
+import { operacaoRoleSquad, areaRoleAreas } from '../../lib/squads';
 
 export async function POST(req: NextRequest) {
   const { user, response } = await requireAuth();
@@ -87,6 +88,20 @@ export async function GET() {
     // (mesmo critério já usado na aba "Indisponíveis Agora").
     const all = await queries.getAllUnavailability({ limit: LIMIT });
     const data = await filterUnavailabilityForLider(all, user!);
+    return NextResponse.json({ data, truncated: all.length >= LIMIT });
+  }
+  const opSquad = operacaoRoleSquad(user!.role);
+  if (opSquad) {
+    // Painel Geral de "operação": todo mundo daquele cliente, de qualquer área — só visualização.
+    const all = await queries.getAllUnavailability({ limit: LIMIT });
+    const data = await filterUnavailabilityBySquad(all, opSquad);
+    return NextResponse.json({ data, truncated: all.length >= LIMIT });
+  }
+  const roleAreas = areaRoleAreas(user!.role);
+  if (roleAreas) {
+    // Painel Geral por área (ex.: "midias_seo"): todo mundo daquelas áreas, de qualquer cliente — só visualização.
+    const all = await queries.getAllUnavailability({ limit: LIMIT });
+    const data = await filterUnavailabilityByAreas(all, roleAreas);
     return NextResponse.json({ data, truncated: all.length >= LIMIT });
   }
   return NextResponse.json({ data: await queries.getUserUnavailability(user!.id), truncated: false });
