@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { Calendar, Clock, CircleCheck, Plus, FileText, History } from 'lucide-react';
+import { Calendar, Clock, CircleCheck, Plus, FileText, History, Users } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { withAuth } from '../../components/withAuth';
 import { EditUnavailDialog } from '../../components/EditUnavailDialog';
@@ -57,6 +57,8 @@ function UnavailPage() {
     { key: 'form', show: true, label: 'Solicitar', icon: Plus },
     { key: 'mine', show: true, label: 'Minhas Solicitações', icon: FileText },
     { key: 'all', show: isAdmin, label: 'Histórico Completo', icon: History },
+    // Última aba: só líder e roles por área (ex: Mídia e SEO) — a equipe é quem reporta pra eles.
+    { key: 'team', show: isLider || isAreaRole(user!.role), label: 'Minha Equipe', icon: Users },
   ];
   const visibleTabs = tabs.filter((t) => t.show);
 

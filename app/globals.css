@@ -40,6 +40,42 @@
   --glow-red: 0 0 20px rgba(240, 112, 112, 0.12);
 }
 
+/* Tema claro — trocado pelo botão ao lado de "Sair" na navbar (ver Navbar.tsx). */
+:root[data-theme="light"] {
+  --bg: #F6F7FB;
+  --surface: #FFFFFF;
+  --surface2: #EEF0F6;
+  --card: #FFFFFF;
+  --card-hover: #F3F4F9;
+  --border: #E1E4ED;
+  --border-light: #CDD2E0;
+  --text: #171A24;
+  --text-muted: #6B7086;
+  --text-dim: #9DA1B4;
+  --accent: #4C6FE0;
+  --accent-soft: rgba(76, 111, 224, 0.08);
+  --accent-border: rgba(76, 111, 224, 0.25);
+  --green: #12986B;
+  --green-soft: rgba(18, 152, 107, 0.08);
+  --green-border: rgba(18, 152, 107, 0.22);
+  --yellow: #B08600;
+  --yellow-soft: rgba(176, 134, 0, 0.08);
+  --yellow-border: rgba(176, 134, 0, 0.22);
+  --orange: #C6690F;
+  --orange-soft: rgba(198, 105, 15, 0.08);
+  --orange-border: rgba(198, 105, 15, 0.22);
+  --red: #D14343;
+  --red-soft: rgba(209, 67, 67, 0.08);
+  --red-border: rgba(209, 67, 67, 0.22);
+  --purple: #7C5CDB;
+  --purple-soft: rgba(124, 92, 219, 0.08);
+  --cyan: #0E86B8;
+  --cyan-soft: rgba(14, 134, 184, 0.08);
+  --glow-accent: none;
+  --glow-green: none;
+  --glow-red: none;
+}
+
 * {
   box-sizing: border-box;
 }

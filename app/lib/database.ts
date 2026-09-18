@@ -194,14 +194,13 @@ export const queries = {
     );
     return approvers.length === 1 ? approvers[0] : approvers.length > 1 ? approvers : null;
   },
-  /** true se alguém na tabela members tem esse email/nome no seu report_to — ou seja, se essa
-   *  pessoa é aprovadora de alguém, independente da role da conta (mesmo um "colaborador" pode ser). */
-  hasDirectReports: async (email: string, name?: string | null) => {
-    const res = await supabase.from(MEMBERS_TABLE).select('report_to_email, report_to_name');
-    if (res.error || !res.data) return false;
+  /** Membros cujo report_to_email/report_to_name aponta pra esse email/nome — a "equipe" de quem aprova. */
+  getDirectReports: async (email: string, name?: string | null) => {
+    const res = await supabase.from(MEMBERS_TABLE).select('*');
+    if (res.error || !res.data) return [];
     const emailLower = email.toLowerCase();
     const nameLower = name ? name.toLowerCase() : null;
-    return res.data.some((m: any) => {
+    return res.data.filter((m: any) => {
       const emails = (m.report_to_email || '').split(/[,;]/).map((s: string) => s.trim().toLowerCase()).filter(Boolean);
       if (emails.includes(emailLower)) return true;
       if (nameLower) {
@@ -210,6 +209,11 @@ export const queries = {
       }
       return false;
     });
+  },
+  /** true se alguém na tabela members tem esse email/nome no seu report_to — ou seja, se essa
+   *  pessoa é aprovadora de alguém, independente da role da conta (mesmo um "colaborador" pode ser). */
+  hasDirectReports: async (email: string, name?: string | null) => {
+    return (await queries.getDirectReports(email, name)).length > 0;
   },
   getApproverEmailsForMember: async (email: string) => {
     const memberRes = await supabase.from(MEMBERS_TABLE).select('report_to_email').eq('email', email).single();

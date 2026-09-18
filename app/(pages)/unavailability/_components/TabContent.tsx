@@ -11,6 +11,7 @@ import { useAuth, useToast } from '../../../providers';
 import { OverviewContent } from './OverviewContent';
 import { PendingContent } from './PendingContent';
 import { AllHistoryContent } from './AllHistoryContent';
+import { TeamContent } from './TeamContent';
 
 interface Props {
   tabKey: string;
@@ -40,6 +41,7 @@ export function TabContent({ tabKey, reloadKey, onReload, onEdit, onDelete }: Pr
         else if (tabKey === 'pending') res = await API.getPendingUnavailability();
         else if (tabKey === 'active') res = await API.getActiveUnavailability();
         else if (tabKey === 'mine') res = await API.getMyUnavailability();
+        else if (tabKey === 'team') res = await API.getTeam();
         if (!cancelled) setData(res);
       } catch (e: any) {
         if (!cancelled) toast.show(e.message, 'error');
@@ -104,6 +106,10 @@ export function TabContent({ tabKey, reloadKey, onReload, onEdit, onDelete }: Pr
 
   if (tabKey === 'all') {
     return <AllHistoryContent all={data?.data || []} truncated={data?.truncated} onEdit={onEdit} onDelete={onDelete} />;
+  }
+
+  if (tabKey === 'team') {
+    return <TeamContent team={(data || []) as any[]} />;
   }
 
   return null;

@@ -1,12 +1,49 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from 'primereact/button';
-import { LogOut, Settings, Users, ClipboardList, CalendarDays } from 'lucide-react';
+import { LogOut, Settings, Users, ClipboardList, CalendarDays, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../providers';
 import { API } from '../lib/api-client';
 import { canViewAllRole, isMasterAdminRole } from '../lib/client-config';
+
+type Theme = 'dark' | 'light';
+
+function applyTheme(theme: Theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const link = document.getElementById('prime-theme-link') as HTMLLinkElement | null;
+  if (link) link.href = theme === 'light' ? '/prime-themes/lara-light-blue.css' : '/prime-themes/lara-dark-blue.css';
+  try { localStorage.setItem('theme', theme); } catch {}
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>('dark');
+
+  useEffect(() => {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    setTheme(current);
+  }, []);
+
+  function toggle() {
+    const next: Theme = theme === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    setTheme(next);
+  }
+
+  return (
+    <Button
+      size="small"
+      severity="secondary"
+      outlined
+      icon={theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
+      onClick={toggle}
+      className="!text-xs !py-1"
+      aria-label={theme === 'light' ? 'Trocar para tema escuro' : 'Trocar para tema claro'}
+    />
+  );
+}
 
 export function Navbar() {
   const { user, refresh } = useAuth();
@@ -93,6 +130,7 @@ export function Navbar() {
               {user.full_name}
             </span>
           )}
+          <ThemeToggle />
           <Button
             size="small"
             severity="secondary"
