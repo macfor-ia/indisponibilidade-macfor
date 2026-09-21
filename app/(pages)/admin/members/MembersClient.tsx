@@ -11,6 +11,7 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { ClipboardList, ChevronLeft, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/Navbar';
+import { PageHeader } from '../../../components/PageHeader';
 import { withAuth } from '../../../components/withAuth';
 import { Card } from '../../../components/Card';
 import { Skeleton } from '../../../components/Skeleton';
@@ -123,18 +124,17 @@ function AdminMembersPage() {
       <Navbar />
       <ConfirmDialog />
       <div className="max-w-[1440px] mx-auto px-4 sm:px-9 py-8">
-        <div className="flex justify-between items-start mb-7 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <ClipboardList size={28} className="text-[var(--accent)]" /> Gerenciar Membros
-            </h1>
-            <p className="text-[var(--text-muted)] text-sm mt-1">Cadastro de prestadores ({filtered.length}/{members.length})</p>
-          </div>
-          <div className="flex gap-2">
-            <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
-            <Button label="Novo Membro" icon={<Plus size={14} />} size="small" onClick={() => openEdit(null)} />
-          </div>
-        </div>
+        <PageHeader
+          icon={<ClipboardList size={28} className="text-[var(--accent)]" />}
+          title="Gerenciar Membros"
+          subtitle={`Cadastro de prestadores (${filtered.length}/${members.length})`}
+          actions={
+            <>
+              <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
+              <Button label="Novo Membro" icon={<Plus size={14} />} size="small" onClick={() => openEdit(null)} />
+            </>
+          }
+        />
 
         <div className="flex gap-3 flex-wrap items-center mb-4">
           <span className="relative">

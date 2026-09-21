@@ -11,6 +11,7 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Users, UserPlus, ChevronLeft, Trash2, Building2, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/Navbar';
+import { PageHeader } from '../../../components/PageHeader';
 import { withAuth } from '../../../components/withAuth';
 import { Card } from '../../../components/Card';
 import { Skeleton } from '../../../components/Skeleton';
@@ -89,20 +90,19 @@ function AdminUsersPage() {
       <Navbar />
       <ConfirmDialog />
       <div className="max-w-[1440px] mx-auto px-4 sm:px-9 py-8">
-        <div className="flex justify-between items-start mb-7 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Users size={28} className="text-[var(--accent)]" /> Gerenciar Usuários
-            </h1>
-            <p className="text-[var(--text-muted)] text-sm mt-1">Verificação e gerenciamento de contas</p>
-          </div>
-          <div className="flex gap-2">
-            {isMaster && (
-              <Button label="Criar Usuário" icon={<UserPlus size={14} />} onClick={() => setCreateOpen(true)} size="small" />
-            )}
-            <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
-          </div>
-        </div>
+        <PageHeader
+          icon={<Users size={28} className="text-[var(--accent)]" />}
+          title="Gerenciar Usuários"
+          subtitle="Verificação e gerenciamento de contas"
+          actions={
+            <>
+              {isMaster && (
+                <Button label="Criar Usuário" icon={<UserPlus size={14} />} onClick={() => setCreateOpen(true)} size="small" />
+              )}
+              <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
+            </>
+          }
+        />
 
         {pending.length > 0 && (
           <Card className="mb-5 border-yellow-500/30">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
+import { PageHeader } from '../../components/PageHeader';
 import { API } from '../../lib/api-client';
 import { useAuth } from '../../providers';
 
@@ -38,10 +39,7 @@ export function LoginClient() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">Indisponibilidade</h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">Acesse sua conta Macfor</p>
-        </div>
+        <PageHeader title="Indisponibilidade" subtitle="Acesse sua conta Macfor" align="center" />
 
         <form onSubmit={submit} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
           <div>

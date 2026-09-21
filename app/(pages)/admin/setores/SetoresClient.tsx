@@ -6,6 +6,7 @@ import { InputText } from 'primereact/inputtext';
 import { ChevronLeft, ChevronDown, ChevronRight, Layers, Search, Crown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/Navbar';
+import { PageHeader } from '../../../components/PageHeader';
 import { withAuth } from '../../../components/withAuth';
 import { Card } from '../../../components/Card';
 import { Skeleton } from '../../../components/Skeleton';
@@ -128,17 +129,12 @@ function SetoresPage() {
     <div className="min-h-screen">
       <Navbar />
       <div className="max-w-[1440px] mx-auto px-4 sm:px-9 py-8">
-        <div className="flex justify-between items-start mb-7 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Layers size={28} className="text-[var(--accent)]" /> Setores
-            </h1>
-            <p className="text-[var(--text-muted)] text-sm mt-1">
-              {groups.length} setores (área + cliente), gerados a partir do cadastro de membros
-            </p>
-          </div>
-          <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
-        </div>
+        <PageHeader
+          icon={<Layers size={28} className="text-[var(--accent)]" />}
+          title="Setores"
+          subtitle={`${groups.length} setores (área + cliente), gerados a partir do cadastro de membros`}
+          actions={<Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />}
+        />
 
         <div className="relative mb-4 max-w-md">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />

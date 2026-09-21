@@ -4,17 +4,23 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from 'primereact/button';
-import { LogOut, Settings, Users, ClipboardList, CalendarDays, Sun, Moon } from 'lucide-react';
+import { LogOut, Settings, Users, ClipboardList, CalendarDays, Sun, Moon, Droplet } from 'lucide-react';
 import { useAuth } from '../providers';
 import { API } from '../lib/api-client';
 import { canViewAllRole, isMasterAdminRole } from '../lib/client-config';
 
-type Theme = 'dark' | 'light';
+type Theme = 'dark' | 'light' | 'blue';
+
+const THEMES: { id: Theme; label: string; icon: React.ReactNode }[] = [
+  { id: 'dark', label: 'Escuro', icon: <Moon size={13} /> },
+  { id: 'light', label: 'Claro', icon: <Sun size={13} /> },
+  { id: 'blue', label: 'Azul Macfor', icon: <Droplet size={13} /> },
+];
 
 function applyTheme(theme: Theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const link = document.getElementById('prime-theme-link') as HTMLLinkElement | null;
-  if (link) link.href = theme === 'light' ? '/prime-themes/lara-light-blue.css' : '/prime-themes/lara-dark-blue.css';
+  if (link) link.href = theme === 'dark' ? '/prime-themes/lara-dark-blue.css' : '/prime-themes/lara-light-blue.css';
   try { localStorage.setItem('theme', theme); } catch {}
 }
 
@@ -22,26 +28,36 @@ function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
-    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-    setTheme(current);
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'light' || current === 'blue' ? current : 'dark');
   }, []);
 
-  function toggle() {
-    const next: Theme = theme === 'light' ? 'dark' : 'light';
+  function select(next: Theme) {
     applyTheme(next);
     setTheme(next);
   }
 
   return (
-    <Button
-      size="small"
-      severity="secondary"
-      outlined
-      icon={theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
-      onClick={toggle}
-      className="!text-xs !py-1"
-      aria-label={theme === 'light' ? 'Trocar para tema escuro' : 'Trocar para tema claro'}
-    />
+    <div className="flex items-center gap-0.5 p-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface2)]" role="radiogroup" aria-label="Tema">
+      {THEMES.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          role="radio"
+          aria-checked={theme === t.id}
+          onClick={() => select(t.id)}
+          title={t.label}
+          aria-label={`Tema ${t.label}`}
+          className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
+            theme === t.id
+              ? 'bg-[var(--accent)] text-white'
+              : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+          }`}
+        >
+          {t.icon}
+        </button>
+      ))}
+    </div>
   );
 }
 

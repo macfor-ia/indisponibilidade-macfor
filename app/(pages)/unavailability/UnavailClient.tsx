@@ -5,6 +5,7 @@ import { TabView, TabPanel } from 'primereact/tabview';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Calendar, Clock, CircleCheck, Plus, FileText, History, Users } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
+import { PageHeader } from '../../components/PageHeader';
 import { withAuth } from '../../components/withAuth';
 import { EditUnavailDialog } from '../../components/EditUnavailDialog';
 import { API } from '../../lib/api-client';
@@ -89,17 +90,11 @@ function UnavailPage() {
       <Navbar />
       <ConfirmDialog />
       <div className="max-w-[1440px] mx-auto px-4 sm:px-9 py-8">
-        <div className="flex justify-between items-start mb-7 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Calendar size={28} className="text-[var(--accent)]" />
-              Indisponibilidade de Agenda
-            </h1>
-            <p className="text-[var(--text-muted)] text-sm mt-1">
-              Controle de períodos de descanso ou indisponibilidade
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          icon={<Calendar size={28} className="text-[var(--accent)]" />}
+          title="Indisponibilidade de Agenda"
+          subtitle="Controle de períodos de descanso ou indisponibilidade"
+        />
 
         {isAdmin && kpis && <KpiStrip kpis={kpis} />}
         {isAdmin && <ActiveTimeline items={active} />}

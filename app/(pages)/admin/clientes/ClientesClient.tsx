@@ -6,6 +6,7 @@ import { InputText } from 'primereact/inputtext';
 import { ChevronLeft, Plus, Pencil, Trash2, Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/Navbar';
+import { PageHeader } from '../../../components/PageHeader';
 import { withAuth } from '../../../components/withAuth';
 import { Card } from '../../../components/Card';
 import { Skeleton } from '../../../components/Skeleton';
@@ -61,16 +62,17 @@ function ClientesPage() {
     <div className="min-h-screen">
       <Navbar />
       <div className="max-w-[1440px] mx-auto px-4 sm:px-9 py-8">
-        <div className="flex justify-between items-start mb-7 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 size={28} className="text-[var(--accent)]" /> Clientes</h1>
-            <p className="text-[var(--text-muted)] text-sm mt-1">{filtered.length}/{clientes.length} clientes</p>
-          </div>
-          <div className="flex gap-2">
-            <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
-            <Button label="Novo Cliente" icon={<Plus size={14} />} size="small" onClick={() => openEdit(null)} />
-          </div>
-        </div>
+        <PageHeader
+          icon={<Building2 size={28} className="text-[var(--accent)]" />}
+          title="Clientes"
+          subtitle={`${filtered.length}/${clientes.length} clientes`}
+          actions={
+            <>
+              <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
+              <Button label="Novo Cliente" icon={<Plus size={14} />} size="small" onClick={() => openEdit(null)} />
+            </>
+          }
+        />
         <InputText value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cliente..." className="mb-4 w-72" />
         {loading ? <Skeleton rows={4} /> : (
           <Card className="!p-0 overflow-hidden">

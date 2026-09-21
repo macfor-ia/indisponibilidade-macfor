@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
+import { PageHeader } from '../../components/PageHeader';
 import { Button } from 'primereact/button';
 import { API } from '../../lib/api-client';
 import { ROLE_LABELS } from '../../lib/client-config';
@@ -66,10 +67,7 @@ export function RegisterClient() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">Solicitar Acesso</h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">Crie sua conta no sistema Macfor</p>
-        </div>
+        <PageHeader title="Solicitar Acesso" subtitle="Crie sua conta no sistema Macfor" align="center" />
 
         <form onSubmit={submit} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
           <div>

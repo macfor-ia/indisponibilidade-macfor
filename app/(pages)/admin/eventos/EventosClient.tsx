@@ -10,6 +10,7 @@ import { Dialog } from 'primereact/dialog';
 import { ChevronLeft, Plus, Pencil, Trash2, CalendarDays } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/Navbar';
+import { PageHeader } from '../../../components/PageHeader';
 import { withAuth } from '../../../components/withAuth';
 import { Card } from '../../../components/Card';
 import { Skeleton } from '../../../components/Skeleton';
@@ -65,16 +66,17 @@ function EventosPage() {
     <div className="min-h-screen">
       <Navbar />
       <div className="max-w-[1440px] mx-auto px-4 sm:px-9 py-8">
-        <div className="flex justify-between items-start mb-7 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2"><CalendarDays size={28} className="text-[var(--accent)]" /> Eventos</h1>
-            <p className="text-[var(--text-muted)] text-sm mt-1">{eventos.length} eventos</p>
-          </div>
-          <div className="flex gap-2">
-            <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
-            <Button label="Novo Evento" icon={<Plus size={14} />} size="small" onClick={openNew} />
-          </div>
-        </div>
+        <PageHeader
+          icon={<CalendarDays size={28} className="text-[var(--accent)]" />}
+          title="Eventos"
+          subtitle={`${eventos.length} eventos`}
+          actions={
+            <>
+              <Button label="Voltar" icon={<ChevronLeft size={14} />} severity="secondary" outlined size="small" onClick={() => router.push('/unavailability')} />
+              <Button label="Novo Evento" icon={<Plus size={14} />} size="small" onClick={openNew} />
+            </>
+          }
+        />
         {loading ? <Skeleton rows={4} /> : (
           <Card className="!p-0 overflow-hidden">
             <table className="w-full text-sm">

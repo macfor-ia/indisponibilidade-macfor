@@ -10,15 +10,16 @@ export const metadata: Metadata = {
   description: "Sistema de controle de indisponibilidade da Macfor",
 };
 
-// Roda antes do React hidratar, pra já aplicar o tema salvo (claro/escuro) sem
-// piscar a tela com o tema errado por uma fração de segundo.
+// Roda antes do React hidratar, pra já aplicar o tema salvo (escuro/claro/azul)
+// sem piscar a tela com o tema errado por uma fração de segundo.
 const THEME_INIT_SCRIPT = `
 (function () {
   try {
-    var theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+    var saved = localStorage.getItem('theme');
+    var theme = (saved === 'light' || saved === 'blue') ? saved : 'dark';
     document.documentElement.setAttribute('data-theme', theme);
     var link = document.getElementById('prime-theme-link');
-    if (link) link.href = theme === 'light' ? '/prime-themes/lara-light-blue.css' : '/prime-themes/lara-dark-blue.css';
+    if (link) link.href = theme === 'dark' ? '/prime-themes/lara-dark-blue.css' : '/prime-themes/lara-light-blue.css';
   } catch (e) {}
 })();
 `;

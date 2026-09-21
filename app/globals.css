@@ -1,77 +1,155 @@
 @import "tailwindcss";
 
+/*
+ * Paleta calibrada por amostragem de pixel real do template de apresentação
+ * Macfor (PDF, 71 slides) e do símbolo do logo — não é uma estimativa
+ * visual. Valores de referência medidos:
+ *   - Azul de destaque (texto sobre fundo escuro OU claro no deck): #58A3F9
+ *   - Azul vivo dos slides de capa/destaque (gradiente):  #0089FE → #00B4FF
+ *   - Fundo escuro "quase-preto" dos slides dark:          #000000–#020304
+ *   - Fundo claro "branco-gelo" azulado dos slides light:  #EAF6FC–#CEEAF8
+ *   - Símbolo do logo: verde #00C79F · roxo #814AFF · vermelho #DC3A4D · azul #00ABFF
+ * "blue" é o 3º tema, inspirado nos slides de capa em azul vivo com cards
+ * em vidro fosco branco por cima. Tema trocado pelo seletor na navbar
+ * (ver Navbar.tsx).
+ */
+
 :root {
-  --bg: #080A10;
-  --surface: #12151E;
-  --surface2: #181C28;
-  --card: #13161F;
-  --card-hover: #1A1E2E;
-  --border: #1E2235;
-  --border-light: #2A2F45;
-  --text: #E8EAF0;
-  --text-muted: #7E839A;
-  --text-dim: #4A4F68;
-  --accent: #6C8EF2;
-  --accent-soft: rgba(108, 142, 242, 0.1);
-  --accent-border: rgba(108, 142, 242, 0.25);
-  --green: #3DD9A0;
-  --green-soft: rgba(61, 217, 160, 0.08);
-  --green-border: rgba(61, 217, 160, 0.2);
+  --bg:
+    radial-gradient(640px 460px at 6% 88%, rgba(88, 163, 249, 0.12), transparent 60%),
+    radial-gradient(560px 480px at 96% 0%, rgba(129, 74, 255, 0.08), transparent 55%),
+    #020304;
+  --surface: #0D1018;
+  --surface2: #131826;
+  --card: #0E121C;
+  --card-hover: #161B2A;
+  --border: #1B2132;
+  --border-light: #262D42;
+  --text: #EDF0F7;
+  --text-muted: #8991AA;
+  --text-dim: #4B5266;
+  --accent: #58A3F9;
+  --accent-soft: rgba(88, 163, 249, 0.12);
+  --accent-border: rgba(88, 163, 249, 0.3);
+  --green: #1FD8A6;
+  --green-soft: rgba(31, 216, 166, 0.08);
+  --green-border: rgba(31, 216, 166, 0.2);
   --yellow: #F5C542;
   --yellow-soft: rgba(245, 197, 66, 0.08);
   --yellow-border: rgba(245, 197, 66, 0.2);
   --orange: #F59E42;
   --orange-soft: rgba(245, 158, 66, 0.08);
   --orange-border: rgba(245, 158, 66, 0.2);
-  --red: #F07070;
-  --red-soft: rgba(240, 112, 112, 0.08);
-  --red-border: rgba(240, 112, 112, 0.2);
-  --purple: #A78BFA;
-  --purple-soft: rgba(167, 139, 250, 0.08);
-  --cyan: #38BDF8;
-  --cyan-soft: rgba(56, 189, 248, 0.08);
+  --red: #F1546B;
+  --red-soft: rgba(241, 84, 107, 0.08);
+  --red-border: rgba(241, 84, 107, 0.2);
+  --purple: #A47BFF;
+  --purple-soft: rgba(164, 123, 255, 0.08);
+  --purple-border: rgba(164, 123, 255, 0.2);
+  --cyan: #22B8FF;
+  --cyan-soft: rgba(34, 184, 255, 0.08);
   --radius: 16px;
   --radius-sm: 10px;
   --radius-xs: 6px;
   --font: 'Outfit', sans-serif;
   --mono: 'JetBrains Mono', monospace;
-  --glow-accent: 0 0 20px rgba(108, 142, 242, 0.15);
-  --glow-green: 0 0 20px rgba(61, 217, 160, 0.12);
-  --glow-red: 0 0 20px rgba(240, 112, 112, 0.12);
+  --glow-accent: 0 0 24px rgba(88, 163, 249, 0.2);
+  --glow-green: 0 0 20px rgba(31, 216, 166, 0.12);
+  --glow-red: 0 0 20px rgba(241, 84, 107, 0.12);
 }
 
-/* Tema claro — trocado pelo botão ao lado de "Sair" na navbar (ver Navbar.tsx). */
+/*
+ * Claro — branco-gelo azulado (textura medida na pág. 62 do deck: base
+ * quase uniforme #EAF6FC, clareando pra branco no canto superior esquerdo
+ * e aprofundando levemente pro azul no canto inferior direito).
+ */
 :root[data-theme="light"] {
-  --bg: #F6F7FB;
+  --bg:
+    radial-gradient(1000px 700px at 6% 2%, rgba(255, 255, 255, 0.75), transparent 45%),
+    radial-gradient(900px 700px at 90% 88%, rgba(88, 163, 249, 0.2), transparent 55%),
+    #EAF6FC;
   --surface: #FFFFFF;
-  --surface2: #EEF0F6;
+  --surface2: #E3EFFB;
   --card: #FFFFFF;
-  --card-hover: #F3F4F9;
-  --border: #E1E4ED;
-  --border-light: #CDD2E0;
-  --text: #171A24;
-  --text-muted: #6B7086;
-  --text-dim: #9DA1B4;
-  --accent: #4C6FE0;
-  --accent-soft: rgba(76, 111, 224, 0.08);
-  --accent-border: rgba(76, 111, 224, 0.25);
-  --green: #12986B;
-  --green-soft: rgba(18, 152, 107, 0.08);
-  --green-border: rgba(18, 152, 107, 0.22);
+  --card-hover: #EFF6FC;
+  --border: #D7E6F5;
+  --border-light: #C0D6EE;
+  --text: #131A2C;
+  --text-muted: #5B6478;
+  --text-dim: #8D96AC;
+  --accent: #0B72E0;
+  --accent-soft: rgba(11, 114, 224, 0.1);
+  --accent-border: rgba(11, 114, 224, 0.25);
+  --green: #0C9370;
+  --green-soft: rgba(12, 147, 112, 0.08);
+  --green-border: rgba(12, 147, 112, 0.22);
   --yellow: #B08600;
   --yellow-soft: rgba(176, 134, 0, 0.08);
   --yellow-border: rgba(176, 134, 0, 0.22);
   --orange: #C6690F;
   --orange-soft: rgba(198, 105, 15, 0.08);
   --orange-border: rgba(198, 105, 15, 0.22);
-  --red: #D14343;
-  --red-soft: rgba(209, 67, 67, 0.08);
-  --red-border: rgba(209, 67, 67, 0.22);
-  --purple: #7C5CDB;
-  --purple-soft: rgba(124, 92, 219, 0.08);
+  --red: #DC3A4D;
+  --red-soft: rgba(220, 58, 77, 0.08);
+  --red-border: rgba(220, 58, 77, 0.22);
+  --purple: #7048D6;
+  --purple-soft: rgba(112, 72, 214, 0.08);
+  --purple-border: rgba(112, 72, 214, 0.2);
   --cyan: #0E86B8;
   --cyan-soft: rgba(14, 134, 184, 0.08);
   --glow-accent: none;
+  --glow-green: none;
+  --glow-red: none;
+}
+
+/*
+ * Azul Macfor — o azul vivo das capas e slides de destaque do deck. Textura
+ * medida na pág. 63 (slide de conteúdo, não a capa): é bem mais uniforme
+ * do que um gradiente diagonal forte — uma base quase plana #0088FE com
+ * nuvens suaves de luz e um leve aprofundamento no canto inferior, mais o
+ * toque de roxo/verde da marca que aparece nas capas do deck. Superfícies
+ * e cards ficam em branco opaco por cima, como os mockups "flutuantes" do
+ * template. Blocos de título (PageHeader) sempre repousam sobre --surface
+ * translúcida em vez do fundo puro, senão texto secundário perde
+ * contraste contra o azul vivo.
+ */
+:root[data-theme="blue"] {
+  --bg:
+    radial-gradient(900px 650px at 14% 8%, rgba(255, 255, 255, 0.24), transparent 50%),
+    radial-gradient(700px 550px at 88% 18%, rgba(255, 255, 255, 0.16), transparent 50%),
+    radial-gradient(850px 600px at 90% 6%, rgba(129, 74, 255, 0.14), transparent 55%),
+    radial-gradient(800px 600px at 42% 96%, rgba(0, 60, 170, 0.22), transparent 55%),
+    #0088FE;
+  --surface: #FFFFFF;
+  --surface2: #EAF4FE;
+  --card: #FFFFFF;
+  --card-hover: #F1F8FE;
+  --border: #D7E9FB;
+  --border-light: #BFDBF7;
+  --text: #0F1B33;
+  --text-muted: #4C5872;
+  --text-dim: #838FA8;
+  --accent: #0066D6;
+  --accent-soft: rgba(0, 102, 214, 0.1);
+  --accent-border: rgba(0, 102, 214, 0.26);
+  --green: #0C9370;
+  --green-soft: rgba(12, 147, 112, 0.08);
+  --green-border: rgba(12, 147, 112, 0.22);
+  --yellow: #B08600;
+  --yellow-soft: rgba(176, 134, 0, 0.08);
+  --yellow-border: rgba(176, 134, 0, 0.22);
+  --orange: #C6690F;
+  --orange-soft: rgba(198, 105, 15, 0.08);
+  --orange-border: rgba(198, 105, 15, 0.22);
+  --red: #DC3A4D;
+  --red-soft: rgba(220, 58, 77, 0.08);
+  --red-border: rgba(220, 58, 77, 0.22);
+  --purple: #7048D6;
+  --purple-soft: rgba(112, 72, 214, 0.08);
+  --purple-border: rgba(112, 72, 214, 0.2);
+  --cyan: #0E86B8;
+  --cyan-soft: rgba(14, 134, 184, 0.08);
+  --glow-accent: 0 0 24px rgba(255, 255, 255, 0.4);
   --glow-green: none;
   --glow-red: none;
 }
@@ -83,6 +161,7 @@
 body {
   font-family: var(--font);
   background: var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
