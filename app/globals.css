@@ -154,6 +154,145 @@
   --glow-red: none;
 }
 
+/*
+ * Vidro — mesmos tokens do tema "Azul Macfor" (texto, bordas, acento e cores
+ * semânticas idênticas), com duas diferenças:
+ *   1. o fundo é a imagem real (public/themes/bg-vidro.png) em vez do
+ *      gradiente montado à mão;
+ *   2. as superfícies não são brancas opacas, e sim brancas translúcidas —
+ *      combinadas com o backdrop-filter logo abaixo, produzem o efeito
+ *      glassmorphism (vidro fosco) deixando o azul do fundo vazar.
+ * A opacidade fica em ~0.6 de propósito: translúcido o suficiente pra ler
+ * como vidro, opaco o suficiente pra manter o texto escuro legível por cima
+ * (mesmo contraste do tema azul).
+ */
+:root[data-theme="glass"] {
+  --bg: center / cover no-repeat url('/themes/bg-vidro.png'), #0088FE;
+  --surface: rgba(255, 255, 255, 0.58);
+  --surface2: rgba(255, 255, 255, 0.42);
+  --card: rgba(255, 255, 255, 0.6);
+  --card-hover: rgba(255, 255, 255, 0.74);
+  --border: rgba(255, 255, 255, 0.55);
+  --border-light: rgba(255, 255, 255, 0.75);
+  --text: #0F1B33;
+  --text-muted: #3D4A66;
+  --text-dim: #6B7794;
+  --accent: #0057C8;
+  --accent-soft: rgba(0, 87, 200, 0.12);
+  --accent-border: rgba(0, 87, 200, 0.3);
+  --green: #0A7D5F;
+  --green-soft: rgba(10, 125, 95, 0.12);
+  --green-border: rgba(10, 125, 95, 0.28);
+  --yellow: #8F6B00;
+  --yellow-soft: rgba(143, 107, 0, 0.12);
+  --yellow-border: rgba(143, 107, 0, 0.28);
+  --orange: #A85408;
+  --orange-soft: rgba(168, 84, 8, 0.12);
+  --orange-border: rgba(168, 84, 8, 0.28);
+  --red: #C22C41;
+  --red-soft: rgba(194, 44, 65, 0.12);
+  --red-border: rgba(194, 44, 65, 0.28);
+  --purple: #5B36BE;
+  --purple-soft: rgba(91, 54, 190, 0.12);
+  --purple-border: rgba(91, 54, 190, 0.28);
+  --cyan: #0A6E97;
+  --cyan-soft: rgba(10, 110, 151, 0.12);
+  --glow-accent: 0 0 24px rgba(255, 255, 255, 0.45);
+  --glow-green: none;
+  --glow-red: none;
+}
+
+/*
+ * O efeito de vidro em si. Card/Navbar/PageHeader já trazem backdrop-blur do
+ * Tailwind; aqui o blur é reforçado (só neste tema) e estendido aos
+ * componentes do PrimeReact, que por padrão vêm com fundo branco chapado e
+ * destoariam das superfícies translúcidas ao redor.
+ */
+:root[data-theme="glass"] .backdrop-blur-sm,
+:root[data-theme="glass"] .backdrop-blur-md {
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+:root[data-theme="glass"] .p-inputtext,
+:root[data-theme="glass"] .p-dropdown,
+:root[data-theme="glass"] .p-tabview .p-tabview-panels,
+:root[data-theme="glass"] .p-dialog .p-dialog-header,
+:root[data-theme="glass"] .p-dialog .p-dialog-content,
+:root[data-theme="glass"] .p-dialog .p-dialog-footer {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* O label do dropdown também é um .p-inputtext — sem isto ele ganharia um
+   segundo fundo translúcido por cima do do próprio dropdown (caixa na caixa). */
+:root[data-theme="glass"] .p-dropdown .p-dropdown-label {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Abas: a barra é o vidro. Os links têm fundo branco próprio no PrimeReact,
+   com seletores bem específicos (o de hover chega a 0,6,1) — por isso cada
+   estado é espelhado aqui com o prefixo do tema, em vez de usar !important. */
+:root[data-theme="glass"] .p-tabview .p-tabview-nav {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+:root[data-theme="glass"] .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  background: transparent;
+}
+:root[data-theme="glass"] .p-tabview .p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+  background: rgba(255, 255, 255, 0.35);
+}
+:root[data-theme="glass"] .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Painéis flutuantes (dropdown aberto, calendário) ficam mais opacos pra não
+   embaralhar com o conteúdo que fica atrás deles. O cabeçalho do calendário
+   tem fundo branco próprio e precisa ficar transparente sobre o painel. */
+:root[data-theme="glass"] .p-dropdown-panel,
+:root[data-theme="glass"] .p-datepicker {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+:root[data-theme="glass"] .p-datepicker .p-datepicker-header {
+  background: transparent;
+}
+
+/*
+ * Neste tema todo texto que seria branco fica preto: a classe text-white do
+ * Tailwind (selos de papel, botão ativo do seletor de tema) e os botões
+ * preenchidos do PrimeReact. Botões outlined/text/link ficam de fora — o texto
+ * deles já é colorido, não branco. O seletor dos botões chega a (0,6,0) de
+ * propósito, pra ganhar dos estados :hover/:active do PrimeReact (até 0,4,0).
+ */
+:root[data-theme="glass"] .text-white,
+:root[data-theme="glass"] .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-link) {
+  color: #000000;
+}
+
+/*
+ * Abas e diálogos do PrimeReact definem uma cor de texto própria (branca no
+ * lara-dark-blue, cinza no lara-light-blue) que é herdada por todo o conteúdo
+ * do app dentro deles. Como a maior parte do nosso conteúdo não declara cor,
+ * ela ficava refém de qual arquivo do PrimeReact estivesse carregado — foi o
+ * que deixou o texto da tabela branco em cima do fundo claro. Aqui a cor passa
+ * a vir do token do tema. O :root é só pra ganhar o desempate de
+ * especificidade: o CSS do PrimeReact é injetado depois deste arquivo.
+ */
+:root .p-tabview .p-tabview-panels,
+:root .p-dialog .p-dialog-content,
+:root .p-dialog .p-dialog-header {
+  color: var(--text);
+}
+
 * {
   box-sizing: border-box;
 }

@@ -10,6 +10,13 @@ interface TeamMember {
   area?: string | null;
   squad?: string | null;
   unavailable_now: boolean;
+  remaining_days: number;
+}
+
+function quotaColor(remaining: number) {
+  if (remaining <= 0) return 'text-red-400';
+  if (remaining <= 5) return 'text-orange-400';
+  return 'text-emerald-400';
 }
 
 interface Props {
@@ -41,15 +48,20 @@ export function TeamContent({ team }: Props) {
             <div className="text-xs text-[var(--text-muted)] mb-3">
               {[m.area, m.squad].filter(Boolean).join(' · ') || 'Sem área/squad cadastrado'}
             </div>
-            {m.unavailable_now ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
-                <CircleDot size={10} /> Indisponível agora
+            <div className="flex items-center justify-between gap-2">
+              {m.unavailable_now ? (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                  <CircleDot size={10} /> Indisponível agora
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <CircleCheck size={10} /> Disponível
+                </span>
+              )}
+              <span className={`text-xs font-mono font-semibold ${quotaColor(m.remaining_days)}`}>
+                {m.remaining_days} <span className="text-[var(--text-muted)] font-sans font-normal">dias</span>
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <CircleCheck size={10} /> Disponível
-              </span>
-            )}
+            </div>
           </Card>
         ))}
       </div>

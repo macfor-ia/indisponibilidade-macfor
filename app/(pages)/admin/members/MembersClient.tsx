@@ -31,6 +31,7 @@ interface Member {
   operacoes?: boolean;
   day_offs_quota?: number;
   mes_ano_entrada?: string | null;
+  credito_anual_dias?: number;
 }
 
 function AdminMembersPage() {
@@ -99,7 +100,7 @@ function AdminMembersPage() {
   }
 
   function openEdit(m: Member | null) {
-    setEditing(m || { id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to_name: '', report_to_email: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
+    setEditing(m || { id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to_name: '', report_to_email: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '', credito_anual_dias: 20 });
     setEditOpen(true);
   }
 
@@ -163,6 +164,7 @@ function AdminMembersPage() {
                   <th className="px-3 py-2.5 text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Reporta para</th>
                   <th className="px-3 py-2.5 text-center text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Entrada</th>
                   <th className="px-3 py-2.5 text-center text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Dias</th>
+                  <th className="px-3 py-2.5 text-center text-[11px] uppercase tracking-wider text-[var(--text-muted)]" title="Dias creditados a cada aniversário de empresa">Créd./ano</th>
                   <th className="px-3 py-2.5 text-center text-[11px] uppercase tracking-wider text-[var(--text-muted)]">Ações</th>
                 </tr>
               </thead>
@@ -179,6 +181,7 @@ function AdminMembersPage() {
                     <td className="px-3 py-2 text-xs text-[var(--text-muted)]">{reportToNames(m)}</td>
                     <td className="px-3 py-2 text-center text-xs text-[var(--text-muted)]">{m.mes_ano_entrada || '-'}</td>
                     <td className="px-3 py-2 text-center text-xs">{m.day_offs_quota ?? '-'}</td>
+                    <td className="px-3 py-2 text-center text-xs">{m.credito_anual_dias ?? 20}</td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex gap-1.5 justify-center">
                         <Button icon={<Pencil size={12} />} size="small" severity="secondary" outlined onClick={() => openEdit(m)} />
@@ -200,7 +203,7 @@ function AdminMembersPage() {
 
 function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { visible: boolean; onHide: () => void; member: Member | null; members: Member[]; setores: string[]; onSaved: () => void }) {
   const toast = useToast();
-  const [form, setForm] = useState<Member>({ id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to_name: '', report_to_email: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '' });
+  const [form, setForm] = useState<Member>({ id: 0, name: '', email: '', area: '', squad: '', funcao: '', report_to_name: '', report_to_email: '', operacoes: false, day_offs_quota: 20, mes_ano_entrada: '', credito_anual_dias: 20 });
   const [approverFilter, setApproverFilter] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -264,6 +267,7 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
         day_offs_quota: form.day_offs_quota,
         operacoes: !!form.operacoes,
         mes_ano_entrada: mesAnoEntrada || null,
+        credito_anual_dias: form.credito_anual_dias || 20,
       };
       if (form.id && form.id > 0) {
         await API.updateMember(form.id, data);
@@ -321,8 +325,12 @@ function MemberDialog({ visible, onHide, member, members, setores, onSaved }: { 
               placeholder="MM/AAAA"
               className="w-32"
             />
-            <p className="text-[10px] text-[var(--text-muted)] mt-1">Usado para creditar +20 dias a cada ano completo de casa (a partir do 2º ano).</p>
           </div>
+        </div>
+        <div>
+          <label className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Crédito anual no aniversário</label>
+          <InputNumber value={form.credito_anual_dias ?? 20} onValueChange={(e) => setForm({ ...form, credito_anual_dias: e.value ?? 20 })} min={0} className="w-32" suffix=" dias" />
+          <p className="text-[10px] text-[var(--text-muted)] mt-1">Dias somados ao saldo a cada ano completo de casa, a partir do 2º ano (padrão: 20).</p>
         </div>
         <div className="flex items-center gap-2">
           <Checkbox inputId="mf_operacoes" checked={!!form.operacoes} onChange={(e) => setForm({ ...form, operacoes: e.checked || false })} />

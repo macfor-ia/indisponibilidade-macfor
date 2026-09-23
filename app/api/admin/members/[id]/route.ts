@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!existing) return NextResponse.json({ error: 'Membro não encontrado.' }, { status: 404 });
 
   const body = await req.json();
-  const { name, email, area, squad, funcao, report_to_name, report_to_email, operacoes, day_offs_quota, mes_ano_entrada } = body;
+  const { name, email, area, squad, funcao, report_to_name, report_to_email, operacoes, day_offs_quota, mes_ano_entrada, credito_anual_dias } = body;
   if (!name || !area || !funcao) return NextResponse.json({ error: 'Nome, área e função são obrigatórios.' }, { status: 400 });
   if (email) {
     const emailLower = email.toLowerCase().trim();
@@ -37,6 +37,7 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
       operacoes: !!operacoes,
       day_offs_quota: parseInt(day_offs_quota) || 20,
       mes_ano_entrada: mesAnoEntrada,
+      credito_anual_dias: parseInt(credito_anual_dias) || 20,
     };
     if (email !== undefined) {
       updateData.email = email ? email.toLowerCase().trim() : null;

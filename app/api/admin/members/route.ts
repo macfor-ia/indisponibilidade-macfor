@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const aErr = requireMasterAdmin(user!);
   if (aErr) return aErr;
 
-  const { name, email, area, squad, funcao, report_to_name, report_to_email, operacoes, day_offs_quota, mes_ano_entrada } = await req.json();
+  const { name, email, area, squad, funcao, report_to_name, report_to_email, operacoes, day_offs_quota, mes_ano_entrada, credito_anual_dias } = await req.json();
   if (!name || !area || !funcao) return NextResponse.json({ error: 'Nome, área e função são obrigatórios.' }, { status: 400 });
   if (email) {
     const emailLower = email.toLowerCase().trim();
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       operacoes: !!operacoes,
       day_offs_quota: parseInt(day_offs_quota) || 20,
       mes_ano_entrada: mesAnoEntrada,
+      credito_anual_dias: parseInt(credito_anual_dias) || 20,
     });
     return NextResponse.json({ success: true, member });
   } catch (e: any) {

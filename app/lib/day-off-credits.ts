@@ -1,14 +1,19 @@
 // ═══ CRÉDITO ANUAL DE DAY OFFS POR TEMPO DE CASA ═══
 //
-// Regra: o membro já entra com 20 dias de saldo no dia da contratação
-// (referentes ao 1º ano). Ele só ganha +20 dias quando completa CADA ano
-// adicional de casa — ou seja, a partir do 2º aniversário de empresa, depois
-// no 3º, no 4º, e assim por diante. O 1º aniversário (completar 1 ano) NÃO
-// gera crédito, pois esse ano já foi coberto pelo saldo inicial.
+// Regra: o membro já entra com um saldo inicial no dia da contratação
+// (referente ao 1º ano). Ele só ganha o crédito de novo quando completa CADA
+// ano adicional de casa — ou seja, a partir do 2º aniversário de empresa,
+// depois no 3º, no 4º, e assim por diante. O 1º aniversário (completar 1 ano)
+// NÃO gera crédito, pois esse ano já foi coberto pelo saldo inicial.
 //
-// Exemplo: entrada em Jan/2026 → 20 dias já no início. Em Jan/2027 (1 ano
-// completo) nada é somado. Em Jan/2028 (2 anos completos) soma +20. Em
-// Jan/2029 (3 anos completos) soma mais +20, e assim sucessivamente.
+// Quantos dias são creditados por ano é definido por membro, na coluna
+// `credito_anual_dias` da tabela members (padrão: 20 — mas alguns membros
+// usam 30). Se a coluna vier vazia por algum motivo, cai pra 20.
+//
+// Exemplo (com crédito de 20/ano): entrada em Jan/2026 → 20 dias já no
+// início. Em Jan/2027 (1 ano completo) nada é somado. Em Jan/2028 (2 anos
+// completos) soma +20. Em Jan/2029 (3 anos completos) soma mais +20, e assim
+// sucessivamente.
 //
 // É automático: acionado a cada login do membro (ver app/api/auth/login/route.ts).
 // O cálculo é baseado no tempo total decorrido desde a entrada, não na data
@@ -54,6 +59,7 @@ export interface CreditableMember {
   mes_ano_entrada?: string | null;
   ultimo_credito_em?: string | null; // data real (YYYY-MM-DD) do último crédito concedido, ou null se nunca
   day_offs_quota?: number | null;
+  credito_anual_dias?: number | null; // dias creditados por ano completo de casa (padrão 20, alguns membros usam 30)
 }
 
 /**
@@ -81,8 +87,9 @@ export function computeCreditUpdate(member: CreditableMember, asOf: Date = new D
   const delta = creditsDueNow - creditsGranted;
   if (delta <= 0) return null;
 
+  const creditPerYear = member.credito_anual_dias || 20;
   return {
     ultimo_credito_em: todayIso(asOf),
-    day_offs_quota: (member.day_offs_quota || 0) + delta * 20,
+    day_offs_quota: (member.day_offs_quota || 0) + delta * creditPerYear,
   };
 }

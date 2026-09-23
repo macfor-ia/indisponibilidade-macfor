@@ -4,23 +4,35 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from 'primereact/button';
-import { LogOut, Settings, Users, ClipboardList, CalendarDays, Sun, Moon, Droplet } from 'lucide-react';
+import { LogOut, Settings, Users, ClipboardList, CalendarDays, Sun, Moon, Droplet, Gem } from 'lucide-react';
 import { useAuth } from '../providers';
 import { API } from '../lib/api-client';
 import { canViewAllRole, isMasterAdminRole } from '../lib/client-config';
 
-type Theme = 'dark' | 'light' | 'blue';
+type Theme = 'dark' | 'light' | 'blue' | 'glass';
 
 const THEMES: { id: Theme; label: string; icon: React.ReactNode }[] = [
   { id: 'dark', label: 'Escuro', icon: <Moon size={13} /> },
   { id: 'light', label: 'Claro', icon: <Sun size={13} /> },
   { id: 'blue', label: 'Azul Macfor', icon: <Droplet size={13} /> },
+  { id: 'glass', label: 'Vidro', icon: <Gem size={13} /> },
 ];
+
+const THEME_IDS = THEMES.map((t) => t.id);
 
 function applyTheme(theme: Theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  const link = document.getElementById('prime-theme-link') as HTMLLinkElement | null;
-  if (link) link.href = theme === 'dark' ? '/prime-themes/lara-dark-blue.css' : '/prime-themes/lara-light-blue.css';
+  // O link é criado pelo script de inicialização (ver layout.tsx) e fica fora
+  // da árvore do React de propósito; aqui ele é recriado se por algum motivo
+  // não existir, pra troca de tema nunca ficar sem o CSS do PrimeReact.
+  let link = document.getElementById('prime-theme-link') as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.id = 'prime-theme-link';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+  link.href = theme === 'dark' ? '/prime-themes/lara-dark-blue.css' : '/prime-themes/lara-light-blue.css';
   try { localStorage.setItem('theme', theme); } catch {}
 }
 
@@ -28,8 +40,8 @@ function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
-    const current = document.documentElement.getAttribute('data-theme');
-    setTheme(current === 'light' || current === 'blue' ? current : 'dark');
+    const current = document.documentElement.getAttribute('data-theme') as Theme | null;
+    setTheme(current && THEME_IDS.includes(current) ? current : 'dark');
   }, []);
 
   function select(next: Theme) {

@@ -25,6 +25,7 @@ export async function GET() {
     area: m.area,
     squad: m.squad,
     unavailable_now: m.email ? activeEmails.has(m.email.toLowerCase()) : false,
+    remaining_days: m.day_offs_quota || 0,
   }));
   team.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' }));
 
