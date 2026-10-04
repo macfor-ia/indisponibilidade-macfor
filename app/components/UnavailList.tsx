@@ -4,7 +4,7 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { Tag } from 'primereact/tag';
 import { User, Calendar, CalendarRange, CalendarCheck, Pencil, X, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
-import { DEPT_COLORS, STATUS_MAP, formatDate, isEditorRole, AppUser } from '../lib/client-config';
+import { DEPT_COLORS, STATUS_MAP, formatDate, isEditorRole, unavailTypeShortLabel, AppUser } from '../lib/client-config';
 import { Card } from './Card';
 
 interface EventConflict {
@@ -100,7 +100,7 @@ export function UnavailList({
                     {st.label}
                   </span>
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)]">
-                    {item.unavailability_type === 'prolongado' ? <><CalendarRange size={12} /> Prolongado</> : <><Calendar size={12} /> Pontual</>}
+                    {item.unavailability_type === 'pontual' ? <Calendar size={12} /> : <CalendarRange size={12} />} {unavailTypeShortLabel(item.unavailability_type)}
                   </span>
                   {isActive && (
                     <span className="text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">

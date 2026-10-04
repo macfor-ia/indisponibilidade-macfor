@@ -7,7 +7,7 @@ import { Calendar as PrimeCalendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { API } from '../lib/api-client';
-import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, isFridayOrSaturday } from '../lib/client-config';
+import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, getMaxRetroDate, isFridayOrSaturday } from '../lib/client-config';
 import { useToast } from '../providers';
 
 interface Props {
@@ -27,7 +27,9 @@ export function EditUnavailDialog({ visible, onHide, record, onSaved }: Props) {
   const [endDateError, setEndDateError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const isRetro = type === 'retroativo';
   const minDate = new Date(getMinRequestDate() + 'T00:00:00');
+  const maxRetroDate = new Date(getMaxRetroDate() + 'T00:00:00');
   const typeOptions = UNAVAIL_TYPES.map((t) => ({ label: t.label, value: t.value }));
 
   function toIsoDate(d: Date | null): string {
@@ -95,19 +97,23 @@ export function EditUnavailDialog({ visible, onHide, record, onSaved }: Props) {
       <div className="space-y-3">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Tipo</label>
-          <Dropdown value={type} options={typeOptions} onChange={(e) => setType(e.value)} className="w-full" />
+          <Dropdown value={type} options={typeOptions} onChange={(e) => {
+            // Retroativo só aceita datas passadas e os demais só futuras — limpa o período ao alternar.
+            if ((e.value === 'retroativo') !== isRetro) { setStartDate(null); setEndDate(null); setDays(0); }
+            setType(e.value);
+          }} className="w-full" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">
               {type === 'pontual' ? 'Data do day off' : 'Data de início'}
             </label>
-            <PrimeCalendar value={startDate} onChange={(e) => setStartDate(e.value as Date)} minDate={minDate} dateFormat="dd/mm/yy" showIcon className="w-full" />
+            <PrimeCalendar value={startDate} onChange={(e) => setStartDate(e.value as Date)} minDate={isRetro ? undefined : minDate} maxDate={isRetro ? (endDate || maxRetroDate) : undefined} dateFormat="dd/mm/yy" showIcon className="w-full" />
           </div>
           {type !== 'pontual' && (
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Último dia</label>
-              <PrimeCalendar value={endDate} onChange={(e) => setEndDate(e.value as Date)} minDate={startDate || minDate} dateFormat="dd/mm/yy" showIcon className="w-full" />
+              <PrimeCalendar value={endDate} onChange={(e) => setEndDate(e.value as Date)} minDate={isRetro ? (startDate || undefined) : (startDate || minDate)} maxDate={isRetro ? maxRetroDate : undefined} dateFormat="dd/mm/yy" showIcon className="w-full" />
             </div>
           )}
         </div>

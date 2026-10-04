@@ -32,7 +32,14 @@ export const DEPT_COLORS: Record<string, string> = {
 export const UNAVAIL_TYPES = [
   { value: 'prolongado', label: 'Período prolongado de indisponibilidade' },
   { value: 'pontual', label: 'Dia(s) pontual(is) de agenda bloqueada' },
+  { value: 'retroativo', label: 'Preencher retroativo' },
 ];
+
+export function unavailTypeShortLabel(type: string) {
+  if (type === 'prolongado') return 'Prolongado';
+  if (type === 'retroativo') return 'Retroativo';
+  return 'Pontual';
+}
 
 export const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string }> = {
   pending: { label: 'Pendente', color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
@@ -121,6 +128,13 @@ export function isFridayOrSaturday(dateStr: string) {
 }
 
 /** Data mínima para início de uma solicitação: hoje (não é permitido solicitar para uma data passada). */
+/** Último dia aceito numa solicitação retroativa: ontem (só datas que já passaram). */
+export function getMaxRetroDate() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function getMinRequestDate() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

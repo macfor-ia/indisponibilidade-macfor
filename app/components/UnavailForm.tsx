@@ -7,7 +7,7 @@ import { Calendar as PrimeCalendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
 import { User, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { API } from '../lib/api-client';
-import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, isFridayOrSaturday, AppUser } from '../lib/client-config';
+import { UNAVAIL_TYPES, countCalendarDays, getMinRequestDate, getMaxRetroDate, isFridayOrSaturday, AppUser } from '../lib/client-config';
 import { useToast } from '../providers';
 import { Card } from './Card';
 
@@ -31,7 +31,9 @@ export function UnavailForm({ user, onSubmitted }: Props) {
   const [endDateError, setEndDateError] = useState<string | null>(null);
   const [memberInfo, setMemberInfo] = useState<any>(null);
 
+  const isRetro = type === 'retroativo';
   const minDate = new Date(getMinRequestDate() + 'T00:00:00');
+  const maxRetroDate = new Date(getMaxRetroDate() + 'T00:00:00');
 
   function toIsoDate(d: Date | null): string {
     if (!d) return '';
@@ -125,7 +127,12 @@ export function UnavailForm({ user, onSubmitted }: Props) {
       return;
     }
     const startStr = toIsoDate(startDate);
-    if (startStr < getMinRequestDate()) {
+    if (isRetro) {
+      if (toIsoDate(endDate) > getMaxRetroDate()) {
+        setError('No preenchimento retroativo, o período deve ter terminado até ontem.');
+        return;
+      }
+    } else if (startStr < getMinRequestDate()) {
       setError('A data de início não pode ser uma data passada.');
       return;
     }
@@ -189,7 +196,17 @@ export function UnavailForm({ user, onSubmitted }: Props) {
 
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Tipo de indisponibilidade</label>
-          <Dropdown value={type} options={typeOptions} onChange={(e) => setType(e.value)} placeholder="Selecione..." className="w-full" />
+          <Dropdown value={type} options={typeOptions} onChange={(e) => {
+            // Retroativo só aceita datas passadas e os demais só futuras — limpa o período ao alternar.
+            if ((e.value === 'retroativo') !== isRetro) { setStartDate(null); setEndDate(null); }
+            setType(e.value);
+          }} placeholder="Selecione..." className="w-full" />
+          {isRetro && (
+            <p className="text-[11px] text-[var(--text-muted)] mt-1.5 flex items-center gap-1">
+              <AlertTriangle size={11} className="text-yellow-400" />
+              Registre um período que já passou (ex.: férias tiradas antes da plataforma). Os dias serão descontados do saldo após a confirmação.
+            </p>
+          )}
         </div>
 
         <div>
@@ -202,7 +219,7 @@ export function UnavailForm({ user, onSubmitted }: Props) {
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">
               {type === 'pontual' ? 'Data do day off' : 'Data de início'}
             </label>
-            <PrimeCalendar value={startDate} onChange={(e) => setStartDate(e.value as Date)} minDate={minDate} dateFormat="dd/mm/yy" showIcon className="w-full" />
+            <PrimeCalendar value={startDate} onChange={(e) => setStartDate(e.value as Date)} minDate={isRetro ? undefined : minDate} maxDate={isRetro ? (endDate || maxRetroDate) : undefined} dateFormat="dd/mm/yy" showIcon className="w-full" />
             {type === 'prolongado' && (
               <p className="text-[11px] text-[var(--text-muted)] mt-1.5 flex items-center gap-1">
                 <AlertTriangle size={11} className="text-yellow-400" />
@@ -213,11 +230,13 @@ export function UnavailForm({ user, onSubmitted }: Props) {
           {type !== 'pontual' && (
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Último dia</label>
-              <PrimeCalendar value={endDate} onChange={(e) => setEndDate(e.value as Date)} minDate={startDate || minDate} dateFormat="dd/mm/yy" showIcon className="w-full" />
-              <p className="text-[11px] text-[var(--text-muted)] mt-1.5 flex items-center gap-1">
-                <AlertTriangle size={11} className="text-yellow-400" />
-                Período mínimo de 5 dias corridos, e não pode terminar numa sexta-feira ou sábado.
-              </p>
+              <PrimeCalendar value={endDate} onChange={(e) => setEndDate(e.value as Date)} minDate={isRetro ? (startDate || undefined) : (startDate || minDate)} maxDate={isRetro ? maxRetroDate : undefined} dateFormat="dd/mm/yy" showIcon className="w-full" />
+              {type === 'prolongado' && (
+                <p className="text-[11px] text-[var(--text-muted)] mt-1.5 flex items-center gap-1">
+                  <AlertTriangle size={11} className="text-yellow-400" />
+                  Período mínimo de 5 dias corridos, e não pode terminar numa sexta-feira ou sábado.
+                </p>
+              )}
             </div>
           )}
         </div>

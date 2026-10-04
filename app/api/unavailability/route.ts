@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   if (!unavailability_type || !department || !start_date || !end_date || total_days == null) {
     return NextResponse.json({ error: 'Todos os campos são obrigatórios.' }, { status: 400 });
   }
-  const validTypes = ['prolongado', 'pontual'];
+  const validTypes = ['prolongado', 'pontual', 'retroativo'];
   if (!validTypes.includes(unavailability_type)) {
     return NextResponse.json({ error: 'Tipo de indisponibilidade inválido.' }, { status: 400 });
   }
@@ -32,7 +32,12 @@ export async function POST(req: NextRequest) {
   }
   const now = new Date();
   const todayMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  if (startMs < todayMs) {
+  if (unavailability_type === 'retroativo') {
+    // Registro de período que já passou (ex.: férias tiradas antes da plataforma existir).
+    if (endMs >= todayMs) {
+      return NextResponse.json({ error: 'No preenchimento retroativo, o período deve ter terminado até ontem.' }, { status: 400 });
+    }
+  } else if (startMs < todayMs) {
     return NextResponse.json({ error: 'A data de início não pode ser uma data passada.' }, { status: 400 });
   }
   const expectedDays = countCalendarDays(startMs, endMs);

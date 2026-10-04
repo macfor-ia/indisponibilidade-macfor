@@ -4,7 +4,7 @@ import { Button } from 'primereact/button';
 import { Clock } from 'lucide-react';
 import { Card } from '../../../components/Card';
 import { UnavailCalendar } from '../../../components/UnavailCalendar';
-import { DEPT_COLORS, STATUS_MAP, isEditorRole, formatDate, formatDateShort } from '../../../lib/client-config';
+import { DEPT_COLORS, STATUS_MAP, isEditorRole, formatDate, formatDateShort, unavailTypeShortLabel } from '../../../lib/client-config';
 import { useAuth } from '../../../providers';
 
 interface Props {
@@ -145,7 +145,7 @@ export function OverviewContent({ all, eventos = [], onApprove, onReject }: Prop
                       <tr key={item.id} className="border-b border-[var(--border)] last:border-0">
                         <td className="px-4 py-2.5 font-medium">{item.user_name || item.full_name}</td>
                         <td className="px-4 py-2.5 text-[var(--text-muted)]">{item.department}</td>
-                        <td className="px-4 py-2.5 text-[var(--text-muted)]">{item.unavailability_type === 'prolongado' ? 'Prolongado' : 'Pontual'}</td>
+                        <td className="px-4 py-2.5 text-[var(--text-muted)]">{unavailTypeShortLabel(item.unavailability_type)}</td>
                         <td className="px-4 py-2.5">{formatDateShort(item.start_date)} → {formatDateShort(item.end_date)}</td>
                         <td className="px-4 py-2.5 text-center font-mono font-semibold">{item.total_days}</td>
                         <td className="px-4 py-2.5 text-center">

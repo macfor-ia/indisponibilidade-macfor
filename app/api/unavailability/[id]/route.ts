@@ -21,13 +21,20 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const [pey, pem, ped] = end_date.split('-').map(Number);
   const patchStartMs = Date.UTC(psy, psm - 1, psd);
   const patchEndMs = Date.UTC(pey, pem - 1, ped);
+  const effectiveType = unavailability_type || record.unavailability_type;
+  if (!['prolongado', 'pontual', 'retroativo'].includes(effectiveType)) {
+    return NextResponse.json({ error: 'Tipo de indisponibilidade inválido.' }, { status: 400 });
+  }
   const nowP = new Date();
   const todayMsP = Date.UTC(nowP.getUTCFullYear(), nowP.getUTCMonth(), nowP.getUTCDate());
-  if (patchStartMs < todayMsP) {
+  if (effectiveType === 'retroativo') {
+    if (patchEndMs >= todayMsP) {
+      return NextResponse.json({ error: 'No preenchimento retroativo, o período deve ter terminado até ontem.' }, { status: 400 });
+    }
+  } else if (patchStartMs < todayMsP) {
     return NextResponse.json({ error: 'A data de início não pode ser uma data passada.' }, { status: 400 });
   }
   const total_days = countCalendarDays(patchStartMs, patchEndMs);
-  const effectiveType = unavailability_type || record.unavailability_type;
   if (effectiveType === 'prolongado' && isFridayOrSaturday(patchEndMs)) {
     return NextResponse.json({ error: 'O último dia do período não pode ser sexta-feira nem sábado — o fim das férias deve cair num domingo.' }, { status: 400 });
   }
