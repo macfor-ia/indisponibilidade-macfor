@@ -37,6 +37,8 @@ export const API = {
 
   login: (email: string, password: string) => request('POST', '/api/auth/login', { email, password }),
   register: (data: unknown) => request('POST', '/api/auth/register', data),
+  forgotPassword: (email: string) => request<{ message: string }>('POST', '/api/auth/forgot-password', { email }),
+  resetPassword: (token: string, password: string) => request<{ message: string }>('POST', '/api/auth/reset-password', { token, password }),
   logout: () => { API.clearCache(); return request('POST', '/api/auth/logout'); },
   me: () => request('GET', '/api/auth/me'),
 

@@ -129,6 +129,10 @@ export const queries = {
     const res = await supabase.from(USERS_TABLE).update({ role }).eq('id', id);
     if (res.error) throw res.error;
   },
+  updateUserPassword: async (id: number, passwordHash: string) => {
+    const res = await supabase.from(USERS_TABLE).update({ passw: passwordHash }).eq('id', id);
+    if (res.error) throw res.error;
+  },
 
 
   getAllMembers: async () => {

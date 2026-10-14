@@ -54,7 +54,12 @@ export function LoginClient() {
             />
           </div>
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 block">Senha</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">Senha</label>
+              <button type="button" className="text-xs text-[var(--accent)] hover:underline" onClick={() => { window.location.href = '/forgot-password'; }}>
+                Esqueci minha senha
+              </button>
+            </div>
             <InputText
               value={password}
               onChange={(e) => setPassword(e.target.value)}
